@@ -108,8 +108,8 @@
             always_show_bufferline = true;
             offsets = [
               {
-                filetype = "neo-tree";
-                text = "File Explorer";
+                filetype = "snacks_picker_list";
+                text = "Explorer";
                 highlight = "Directory";
                 separator = true;
               }
@@ -118,58 +118,14 @@
         };
       };
 
-      # Toggleterm - floating terminal
-      # Keymaps: <C-\>=toggle, <Esc>=exit terminal mode
-      toggleterm = {
-        enable = true;
-        settings = {
-          direction = "float";
-          open_mapping = "[[<C-\\>]]";
-          float_opts = {
-            border = "curved";
-            winblend = 0;
-          };
-          size = 20;
-        };
-      };
-
-      # Alpha Dashboard - configured via extraConfigLua
-      # Uses itachi.lua from ~/.config/nix/ascii/
-      # Note: We only enable the plugin, setup is done in extraConfigLua
-
-      # Indent guides
-      indent-blankline = {
-        enable = true;
-        settings = {
-          indent = {
-            char = "│";
-          };
-          scope = {
-            enabled = true;
-            show_start = true;
-          };
-          exclude = {
-            filetypes = [ "help" "alpha" "dashboard" "neo-tree" "Trouble" "lazy" ];
-          };
-        };
-      };
-
-      # Fidget - LSP progress
-      fidget = {
-        enable = true;
-        settings = {
-          notification = {
-            window = {
-              winblend = 0;
-            };
-          };
-          progress = {
-            display = {
-              done_ttl = 3;
-            };
-          };
-        };
-      };
+      # ────────────────────────────────────────────────────────────
+      # REPLACED BY snacks.nvim:
+      # - toggleterm → Snacks.terminal
+      # - alpha-nvim → Snacks.dashboard
+      # - indent-blankline → Snacks.indent
+      # - fidget → Snacks.notifier
+      # All configured in extraConfigLua
+      # ────────────────────────────────────────────────────────────
 
       # ────────────────────────────────────────────────────────────
       # Treesitter - Syntax Highlighting
@@ -202,154 +158,14 @@
       };
 
       # ────────────────────────────────────────────────────────────
-      # Telescope - Fuzzy Finder
-      # Inside Telescope picker:
-      #   i-mode: <C-n>/<C-p>=next/prev, <CR>=confirm, <C-x>=split, <C-v>=vsplit
-      #          <C-t>=tab, <C-u>/<C-d>=scroll preview, <C-/>/?=help, <C-c>=close
-      #          <Tab>=toggle+next, <C-q>=send all to qf, <M-q>=send selected to qf
-      #   n-mode: j/k=next/prev, gg/G=first/last, <Esc>=close
+      # Telescope - REPLACED BY snacks.nvim picker
+      # Keymaps now in extraConfigLua via Snacks.picker
       # ────────────────────────────────────────────────────────────
-      telescope = {
-        enable = true;
-        keymaps = {
-          # ── File Pickers ──
-          "<leader>ff" = { action = "find_files"; options.desc = "Find files"; };
-          "<leader>fg" = { action = "live_grep"; options.desc = "Live grep"; };
-          "<leader>fw" = { action = "grep_string"; options.desc = "Grep word under cursor"; };
-          "<leader>fr" = { action = "oldfiles"; options.desc = "Recent files"; };
-
-          # ── Buffer & Window ──
-          "<leader>fb" = { action = "buffers"; options.desc = "Buffers"; };
-          "<leader>fj" = { action = "jumplist"; options.desc = "Jump list"; };
-
-          # ── Search ──
-          "<leader>f/" = { action = "current_buffer_fuzzy_find"; options.desc = "Fuzzy find in buffer"; };
-          "<leader>fs" = { action = "lsp_document_symbols"; options.desc = "Document symbols"; };
-          "<leader>fS" = { action = "lsp_workspace_symbols"; options.desc = "Workspace symbols"; };
-
-          # ── LSP Pickers ──
-          "<leader>fd" = { action = "diagnostics"; options.desc = "Diagnostics"; };
-          "<leader>fD" = { action = "lsp_definitions"; options.desc = "LSP definitions"; };
-          "<leader>fi" = { action = "lsp_implementations"; options.desc = "LSP implementations"; };
-          "<leader>fR" = { action = "lsp_references"; options.desc = "LSP references"; };
-          "<leader>fy" = { action = "lsp_type_definitions"; options.desc = "LSP type definitions"; };
-
-          # ── Git Pickers ──
-          "<leader>gc" = { action = "git_commits"; options.desc = "Git commits"; };
-          "<leader>gb" = { action = "git_branches"; options.desc = "Git branches"; };
-          "<leader>gs" = { action = "git_status"; options.desc = "Git status"; };
-          "<leader>gS" = { action = "git_stash"; options.desc = "Git stash"; };
-
-          # ── Vim Pickers ──
-          "<leader>fh" = { action = "help_tags"; options.desc = "Help tags"; };
-          "<leader>fc" = { action = "commands"; options.desc = "Commands"; };
-          "<leader>fk" = { action = "keymaps"; options.desc = "Keymaps"; };
-          "<leader>fm" = { action = "marks"; options.desc = "Marks"; };
-          "<leader>fq" = { action = "quickfix"; options.desc = "Quickfix list"; };
-          "<leader>fl" = { action = "loclist"; options.desc = "Location list"; };
-          "<leader>f:" = { action = "command_history"; options.desc = "Command history"; };
-          "<leader>f'" = { action = "registers"; options.desc = "Registers"; };
-        };
-      };
 
       # ────────────────────────────────────────────────────────────
-      # Neo-tree - File Explorer
-      # Keymaps (inside neo-tree window):
-      #   Navigation: <CR>=open, <Space>=toggle, q=close, ?=help
-      #   Splits: S=horizontal, s=vertical, t=new tab, w=pick window
-      #   File ops: a=new file, A=new dir, d=delete, r=rename
-      #   Clipboard: y=copy, x=cut, p=paste, c=copy-to, m=move-to
-      #   View: P=preview, l=focus preview, z=close all, R=refresh
-      #   Git: [g/]g=prev/next modified, H=toggle hidden
-      #   Order: oc/od/og/om/on/os/ot = by created/diag/git/modified/name/size/type
+      # Neo-tree - REPLACED BY snacks.nvim explorer
+      # Keymaps now in extraConfigLua via Snacks.explorer
       # ────────────────────────────────────────────────────────────
-      neo-tree = {
-        enable = true;
-        settings = {
-          close_if_last_window = true;
-          window = {
-            width = 40;
-            position = "right";
-            mappings = {
-              # ── Navigation & Opening ──
-              "<CR>" = "open";
-              "<2-LeftMouse>" = "open";
-              "<Space>" = "toggle_node";
-              "<Esc>" = "cancel";
-              "q" = "close_window";
-              "?" = "show_help";
-              "<" = "prev_source";
-              ">" = "next_source";
-
-              # ── Split/Tab Opening ──
-              "S" = "open_split";
-              "s" = "open_vsplit";
-              "t" = "open_tabnew";
-              "w" = "open_with_window_picker";
-
-              # ── Preview ──
-              "P" = "toggle_preview";
-              "l" = "focus_preview";
-
-              # ── Node Operations ──
-              "C" = "close_node";
-              "z" = "close_all_nodes";
-              "R" = "refresh";
-
-              # ── File Operations ──
-              "a" = "add";
-              "A" = "add_directory";
-              "d" = "delete";
-              "r" = "rename";
-
-              # ── Clipboard ──
-              "y" = "copy_to_clipboard";
-              "x" = "cut_to_clipboard";
-              "p" = "paste_from_clipboard";
-              "c" = "copy";
-              "m" = "move";
-
-              # ── File Info ──
-              "i" = "show_file_details";
-            };
-          };
-
-          # Filesystem-specific mappings
-          filesystem = {
-            window = {
-              mappings = {
-                # ── Directory Navigation ──
-                "<BS>" = "navigate_up";
-                "." = "set_root";
-
-                # ── Filtering ──
-                "H" = "toggle_hidden";
-                "/" = "fuzzy_finder";
-                "f" = "filter_on_submit";
-                "<C-x>" = "clear_filter";
-
-                # ── Git Navigation ──
-                "[g" = "prev_git_modified";
-                "]g" = "next_git_modified";
-
-                # ── Order by (prefix: o) ──
-                "oc" = "order_by_created";
-                "od" = "order_by_diagnostics";
-                "og" = "order_by_git_status";
-                "om" = "order_by_modified";
-                "on" = "order_by_name";
-                "os" = "order_by_size";
-                "ot" = "order_by_type";
-              };
-            };
-            filtered_items = {
-              visible = false;
-              hide_dotfiles = false;
-              hide_gitignored = true;
-            };
-          };
-        };
-      };
 
       # ────────────────────────────────────────────────────────────
       # LSP - Language Server Protocol
@@ -623,7 +439,7 @@
         enable = true;
         settings = {
           spec = [
-            # ── Find (Telescope) ──
+            # ── Find (Snacks.picker) ──
             { __unkeyed-1 = "<leader>f"; group = "Find"; icon = " "; }
 
             # ── Code/LSP ──
@@ -640,8 +456,11 @@
             # ── Search/Split ──
             { __unkeyed-1 = "<leader>s"; group = "Search/Split"; icon = " "; }
 
-            # ── Toggle ──
+            # ── Toggle (vim options) ──
             { __unkeyed-1 = "<leader>t"; group = "Toggle"; icon = " "; }
+
+            # ── UI Toggles (Snacks.toggle) ──
+            { __unkeyed-1 = "<leader>u"; group = "UI Toggle"; icon = "󰙵 "; }
 
             # ── Buffer ──
             { __unkeyed-1 = "<leader>b"; group = "Buffer"; icon = " "; }
@@ -670,7 +489,6 @@
     # ══════════════════════════════════════════════════════════════
     extraPlugins = with pkgs.vimPlugins; [
       smear-cursor-nvim
-      alpha-nvim  # Dashboard plugin, configured in extraConfigLua
       # vim-visual-multi - Multi-cursor support (like Ctrl+D in VS Code)
       (pkgs.vimUtils.buildVimPlugin {
         name = "vim-visual-multi";
@@ -680,6 +498,19 @@
           rev = "master";
           sha256 = "sha256-KzBWkB/PYph6OfuF0GgNFYgqUAwMYbQQZbaaG9XuWZY=";
         };
+      })
+      # snacks.nvim - batteries-included plugin collection
+      # Replaces: telescope, neo-tree, alpha-nvim, toggleterm, indent-blankline, fidget
+      (pkgs.vimUtils.buildVimPlugin {
+        name = "snacks-nvim";
+        src = pkgs.fetchFromGitHub {
+          owner = "folke";
+          repo = "snacks.nvim";
+          rev = "fe7cfe9800a182274d0f868a74b7263b8c0c020b";
+          sha256 = "sha256-vRedYg29QGPGW0hOX9qbRSIImh1d/SoDZHImDF2oqKM=";
+        };
+        # Disable all checks - snacks.nvim modules need runtime setup
+        doCheck = false;
       })
     ];
 
@@ -692,72 +523,167 @@
         legacy_computing_symbols_support = true,
       })
 
-      -- Alpha Dashboard with Itachi ASCII art
-      local alpha = require("alpha")
+      -- ══════════════════════════════════════════════════════════════
+      -- snacks.nvim - Batteries included plugin collection
+      -- Replaces: telescope, neo-tree, alpha-nvim, toggleterm,
+      --           indent-blankline, fidget
+      -- ══════════════════════════════════════════════════════════════
 
-      -- Load itachi.lua directly (it defines highlight groups and returns header)
-      local itachi_path = vim.fn.expand("~/.config/nix/ascii/itachi.lua")
-      local header = dofile(itachi_path)
+      require("snacks").setup({
+        -- ── Core Features ──
+        bigfile = { enabled = true },
+        quickfile = { enabled = true },
+        input = { enabled = true },
+        scope = { enabled = true },
+        words = { enabled = true },
 
-      -- Dashboard buttons with working keymaps
-      local function button(sc, txt, keybind, keybind_opts)
-        local sc_clean = sc:gsub("%s", ""):gsub("SPC", "<leader>")
-        local opts = {
-          position = "center",
-          shortcut = sc,
-          cursor = 3,
-          width = 50,
-          align_shortcut = "right",
-          hl_shortcut = "Keyword",
-          keymap = { "n", sc_clean, keybind, keybind_opts or { noremap = true, silent = true, nowait = true } },
-        }
-        local on_press = function()
-          local key = vim.api.nvim_replace_termcodes(keybind, true, false, true)
-          vim.api.nvim_feedkeys(key, "t", false)
-        end
-        return {
-          type = "button",
-          val = txt,
-          on_press = on_press,
-          opts = opts,
-        }
-      end
-
-      local buttons = {
-        type = "group",
-        val = {
-          button("e", "  New File", "<cmd>ene<CR>"),
-          button("f", "  Find File", "<cmd>Telescope find_files<CR>"),
-          button("r", "  Recent Files", "<cmd>Telescope oldfiles<CR>"),
-          button("g", "  Find Word", "<cmd>Telescope live_grep<CR>"),
-          button("c", "  Configuration", "<cmd>e ~/.config/nix/modules/home/neovim.nix<CR>"),
-          button("q", "  Quit", "<cmd>qa<CR>"),
+        -- ── UI Features ──
+        notifier = {
+          enabled = true,
+          timeout = 3000,
+          style = "compact",
         },
-        opts = { spacing = 1 },
-      }
 
-      -- Footer with Itachi quote
-      local footer = {
-        type = "text",
-        val = {
-          "",
-          "\"One's Reality Might Be Another's Illusion.\"",
-          "                              - Itachi Uchiha",
+        indent = {
+          enabled = true,
+          char = "│",
+          scope = { enabled = true },
         },
-        opts = { position = "center", hl = "Comment" },
-      }
 
-      -- Layout
-      local layout = {
-        { type = "padding", val = 2 },
-        header,
-        { type = "padding", val = 2 },
-        buttons,
-        { type = "padding", val = 1 },
-        footer,
-      }
+        scroll = {
+          enabled = true,
+          animate = {
+            duration = { step = 15, total = 250 },
+          },
+        },
 
-      alpha.setup({ layout = layout })
+        -- ── Picker (replaces Telescope) ──
+        picker = {
+          enabled = true,
+          sources = {
+            files = { hidden = true },
+            grep = { hidden = true },
+            -- Explorer on the right side
+            explorer = {
+              layout = { layout = { position = "right" } },
+            },
+          },
+        },
+
+        -- ── Explorer (replaces Neo-tree) ──
+        explorer = {
+          enabled = true,
+          replace_netrw = true,
+        },
+
+        -- ── Terminal (replaces toggleterm) ──
+        terminal = {
+          enabled = true,
+          win = {
+            style = "float",
+            border = "rounded",
+          },
+        },
+
+        -- ── Dashboard ──
+        dashboard = {
+          enabled = true,
+          sections = {
+            { section = "header" },
+            { section = "keys", gap = 1, padding = 1 },
+          },
+        },
+
+        -- ── Extra Features ──
+        lazygit = { enabled = true },
+        zen = { enabled = true },
+        toggle = { enabled = true },
+        rename = { enabled = true },
+        dim = { enabled = true },
+        git = { enabled = true },
+        gitbrowse = { enabled = true },
+      })
+
+      -- ══════════════════════════════════════════════════════════════
+      -- Snacks Keymaps
+      -- ══════════════════════════════════════════════════════════════
+
+      local map = vim.keymap.set
+
+      -- ── Picker (File/Buffer/Search) ──
+      map("n", "<leader>ff", function() Snacks.picker.files() end, { desc = "Find files" })
+      map("n", "<leader>fg", function() Snacks.picker.grep() end, { desc = "Live grep" })
+      map("n", "<leader>fw", function() Snacks.picker.grep_word() end, { desc = "Grep word under cursor" })
+      map("n", "<leader>fr", function() Snacks.picker.recent() end, { desc = "Recent files" })
+      map("n", "<leader>fb", function() Snacks.picker.buffers() end, { desc = "Buffers" })
+      map("n", "<leader>fj", function() Snacks.picker.jumps() end, { desc = "Jump list" })
+      map("n", "<leader>f/", function() Snacks.picker.lines() end, { desc = "Fuzzy find in buffer" })
+      map("n", "<leader>fs", function() Snacks.picker.lsp_symbols() end, { desc = "Document symbols" })
+      map("n", "<leader>fS", function() Snacks.picker.lsp_workspace_symbols() end, { desc = "Workspace symbols" })
+
+      -- ── Picker (Diagnostics/LSP) ──
+      map("n", "<leader>fd", function() Snacks.picker.diagnostics() end, { desc = "Diagnostics" })
+      map("n", "<leader>fD", function() Snacks.picker.lsp_definitions() end, { desc = "LSP definitions" })
+      map("n", "<leader>fi", function() Snacks.picker.lsp_implementations() end, { desc = "LSP implementations" })
+      map("n", "<leader>fR", function() Snacks.picker.lsp_references() end, { desc = "LSP references" })
+      map("n", "<leader>fy", function() Snacks.picker.lsp_type_definitions() end, { desc = "LSP type definitions" })
+
+      -- ── Picker (Git) ──
+      map("n", "<leader>gc", function() Snacks.picker.git_log() end, { desc = "Git commits" })
+      map("n", "<leader>gb", function() Snacks.picker.git_branches() end, { desc = "Git branches" })
+      map("n", "<leader>gs", function() Snacks.picker.git_status() end, { desc = "Git status" })
+      map("n", "<leader>gS", function() Snacks.picker.git_stash() end, { desc = "Git stash" })
+      map("n", "<leader>gd", function() Snacks.picker.git_diff() end, { desc = "Git diff" })
+      map("n", "<leader>gf", function() Snacks.picker.git_log_file() end, { desc = "Git log file" })
+
+      -- ── Picker (Vim) ──
+      map("n", "<leader>fh", function() Snacks.picker.help() end, { desc = "Help tags" })
+      map("n", "<leader>fc", function() Snacks.picker.commands() end, { desc = "Commands" })
+      map("n", "<leader>fk", function() Snacks.picker.keymaps() end, { desc = "Keymaps" })
+      map("n", "<leader>fm", function() Snacks.picker.marks() end, { desc = "Marks" })
+      map("n", "<leader>fq", function() Snacks.picker.qflist() end, { desc = "Quickfix list" })
+      map("n", "<leader>fl", function() Snacks.picker.loclist() end, { desc = "Location list" })
+      map("n", "<leader>f:", function() Snacks.picker.command_history() end, { desc = "Command history" })
+      map("n", "<leader>f'", function() Snacks.picker.registers() end, { desc = "Registers" })
+
+      -- ── Picker (Extra) ──
+      map("n", "<leader><space>", function() Snacks.picker.smart() end, { desc = "Smart find files" })
+      map("n", "<leader>,", function() Snacks.picker.buffers() end, { desc = "Buffers" })
+      map("n", "<leader>/", function() Snacks.picker.grep() end, { desc = "Grep" })
+      map("n", "<leader>fu", function() Snacks.picker.undo() end, { desc = "Undo history" })
+      map("n", "<leader>fp", function() Snacks.picker.projects() end, { desc = "Projects" })
+      map("n", "<leader>fn", function() Snacks.picker.notifications() end, { desc = "Notifications" })
+
+      -- ── LSP Go-to (using Snacks picker) ──
+      map("n", "gd", function() Snacks.picker.lsp_definitions() end, { desc = "Go to definition" })
+      map("n", "gr", function() Snacks.picker.lsp_references() end, { desc = "Go to references" })
+      map("n", "gi", function() Snacks.picker.lsp_implementations() end, { desc = "Go to implementation" })
+      map("n", "gy", function() Snacks.picker.lsp_type_definitions() end, { desc = "Go to type definition" })
+
+      -- ── Explorer ──
+      map("n", "<leader>e", function() Snacks.explorer() end, { desc = "Toggle explorer" })
+
+      -- ── Terminal ──
+      map("n", "<C-\\>", function() Snacks.terminal.toggle() end, { desc = "Toggle terminal" })
+      map("t", "<C-\\>", function() Snacks.terminal.toggle() end, { desc = "Toggle terminal" })
+
+      -- ── Extra Features ──
+      map("n", "<leader>gg", function() Snacks.lazygit() end, { desc = "Lazygit" })
+      map("n", "<leader>z", function() Snacks.zen() end, { desc = "Zen mode" })
+      map("n", "<leader>Z", function() Snacks.zen.zoom() end, { desc = "Zoom window" })
+      map("n", "<leader>.", function() Snacks.scratch() end, { desc = "Scratch buffer" })
+      map("n", "<leader>n", function() Snacks.notifier.show_history() end, { desc = "Notification history" })
+
+      -- ── Toggles ──
+      Snacks.toggle.option("spell", { name = "Spelling" }):map("<leader>us")
+      Snacks.toggle.option("wrap", { name = "Wrap" }):map("<leader>uw")
+      Snacks.toggle.option("relativenumber", { name = "Relative Number" }):map("<leader>uL")
+      Snacks.toggle.diagnostics():map("<leader>ud")
+      Snacks.toggle.line_number():map("<leader>ul")
+      Snacks.toggle.treesitter():map("<leader>uT")
+      Snacks.toggle.inlay_hints():map("<leader>uh")
+      Snacks.toggle.indent():map("<leader>ug")
+      Snacks.toggle.dim():map("<leader>uD")
     '';
 
     # ══════════════════════════════════════════════════════════════
@@ -768,14 +694,11 @@
       # General
       # ──────────────────────────────────────────────────────────
       { mode = "n"; key = "<Esc>"; action = "<cmd>nohlsearch<CR>"; options.desc = "Clear search highlight"; }
-      { mode = "n"; key = "<leader>e"; action = "<cmd>Neotree toggle<CR>"; options.desc = "Toggle file explorer"; }
+      # <leader>e (explorer) and <C-\> (terminal) are now in extraConfigLua via Snacks
 
       # ──────────────────────────────────────────────────────────
-      # Terminal (toggleterm)
-      # <C-\>=toggle, <Esc>=exit terminal mode, <C-h/j/k/l>=navigate
+      # Terminal navigation (Snacks.terminal handles toggle via extraConfigLua)
       # ──────────────────────────────────────────────────────────
-      { mode = "n"; key = "<C-\\>"; action = "<cmd>ToggleTerm<CR>"; options.desc = "Toggle terminal"; }
-      { mode = "t"; key = "<C-\\>"; action = "<cmd>ToggleTerm<CR>"; options.desc = "Toggle terminal"; }
       { mode = "t"; key = "<Esc>"; action = "<C-\\><C-n>"; options.desc = "Exit terminal mode"; }
       { mode = "t"; key = "<C-h>"; action = "<C-\\><C-n><C-w>h"; options.desc = "Move to left window"; }
       { mode = "t"; key = "<C-j>"; action = "<C-\\><C-n><C-w>j"; options.desc = "Move to bottom window"; }
@@ -877,17 +800,13 @@
 
       # ──────────────────────────────────────────────────────────
       # LSP - Language Server Protocol
-      # Navigation: gd=definition, gD=declaration, gr=references, gi=impl, gy=type
+      # Navigation: gd, gr, gi, gy are now in extraConfigLua via Snacks.picker
       # Info: K=hover, <C-k>=signature
       # Actions: <leader>ca=code action, <leader>rn=rename, <leader>cf=format
       # Diagnostics: [d/]d=prev/next, <leader>cd=show float
       # ──────────────────────────────────────────────────────────
-      # Go to (using Telescope for better UI)
-      { mode = "n"; key = "gd"; action = "<cmd>Telescope lsp_definitions<CR>"; options.desc = "Go to definition"; }
+      # Go to declaration (not in Snacks)
       { mode = "n"; key = "gD"; action = "<cmd>lua vim.lsp.buf.declaration()<CR>"; options.desc = "Go to declaration"; }
-      { mode = "n"; key = "gr"; action = "<cmd>Telescope lsp_references<CR>"; options.desc = "Go to references"; }
-      { mode = "n"; key = "gi"; action = "<cmd>Telescope lsp_implementations<CR>"; options.desc = "Go to implementation"; }
-      { mode = "n"; key = "gy"; action = "<cmd>Telescope lsp_type_definitions<CR>"; options.desc = "Go to type definition"; }
       # Info
       { mode = "n"; key = "K"; action = "<cmd>lua vim.lsp.buf.hover()<CR>"; options.desc = "Hover documentation"; }
       { mode = ["n" "i"]; key = "<C-k>"; action = "<cmd>lua vim.lsp.buf.signature_help()<CR>"; options.desc = "Signature help"; }

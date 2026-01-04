@@ -19,6 +19,7 @@
   # User packages (portable to Linux)
   home.packages = with pkgs; [
     ripgrep
+    fd          # Fast find alternative (used by snacks.nvim picker)
     jq
     yq-go
     fzf

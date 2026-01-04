@@ -141,6 +141,7 @@ nix-store --optimise
 | Package | Description | Homepage |
 |---------|-------------|----------|
 | [ripgrep](https://github.com/BurntSushi/ripgrep) | Fast grep alternative combining usability of ag with raw speed | Unlicense/MIT |
+| [fd](https://github.com/sharkdp/fd) | Fast find alternative (used by snacks.nvim picker) | MIT/Apache-2.0 |
 | [jq](https://jqlang.github.io/jq/) | Lightweight command-line JSON processor | MIT |
 | [yq-go](https://mikefarah.gitbook.io/yq/) | Portable command-line YAML processor | MIT |
 | [fzf](https://github.com/junegunn/fzf) | Command-line fuzzy finder written in Go | MIT |
@@ -200,14 +201,29 @@ Full Neovim configuration via [nixvim](https://github.com/nix-community/nixvim) 
 | [catppuccin](https://github.com/catppuccin/nvim) | Colorscheme |
 | [lualine](https://github.com/nvim-lualine/lualine.nvim) | Statusline |
 | [bufferline](https://github.com/akinsho/bufferline.nvim) | Buffer tabs |
-| [indent-blankline](https://github.com/lukas-reineke/indent-blankline.nvim) | Indentation guides |
 | [web-devicons](https://github.com/nvim-tree/nvim-web-devicons) | File icons |
-| [fidget](https://github.com/j-hui/fidget.nvim) | LSP progress indicator |
-| [alpha-nvim](https://github.com/goolord/alpha-nvim) | Dashboard |
 | [smear-cursor](https://github.com/sphamba/smear-cursor.nvim) | Cursor animation |
+| **snacks.nvim** (batteries-included) | |
+| [snacks.nvim](https://github.com/folke/snacks.nvim) | Plugin collection by Folke (replaces telescope, neo-tree, alpha-nvim, toggleterm, indent-blankline, fidget) |
+| ↳ `Snacks.picker` | Fuzzy finder (files, grep, buffers, LSP symbols, git) |
+| ↳ `Snacks.explorer` | File explorer |
+| ↳ `Snacks.dashboard` | Startup dashboard |
+| ↳ `Snacks.terminal` | Floating terminal |
+| ↳ `Snacks.indent` | Indentation guides |
+| ↳ `Snacks.notifier` | Notifications & LSP progress |
+| ↳ `Snacks.lazygit` | Lazygit integration |
+| ↳ `Snacks.zen` | Zen/focus mode |
+| ↳ `Snacks.scroll` | Smooth scrolling |
+| ↳ `Snacks.toggle` | Easy option toggles |
+| ↳ `Snacks.rename` | LSP rename with preview |
+| ↳ `Snacks.gitbrowse` | Open file in GitHub |
+| ↳ `Snacks.bigfile` | Optimize large files |
+| ↳ `Snacks.quickfile` | Faster file opening |
+| ↳ `Snacks.scope` | Treesitter scope detection |
+| ↳ `Snacks.words` | LSP word references |
+| ↳ `Snacks.dim` | Dim inactive code |
+| ↳ `Snacks.input` | Better vim.ui.input |
 | **Navigation** | |
-| [telescope](https://github.com/nvim-telescope/telescope.nvim) | Fuzzy finder |
-| [neo-tree](https://github.com/nvim-neo-tree/neo-tree.nvim) | File explorer |
 | [flash](https://github.com/folke/flash.nvim) | Motion/search |
 | **Editing** | |
 | [treesitter](https://github.com/nvim-treesitter/nvim-treesitter) | Syntax highlighting |
@@ -224,7 +240,6 @@ Full Neovim configuration via [nixvim](https://github.com/nix-community/nixvim) 
 | [trouble](https://github.com/folke/trouble.nvim) | Diagnostics panel |
 | [todo-comments](https://github.com/folke/todo-comments.nvim) | Highlight TODO/FIXME |
 | **Other** | |
-| [toggleterm](https://github.com/akinsho/toggleterm.nvim) | Terminal |
 | [which-key](https://github.com/folke/which-key.nvim) | Keybinding hints |
 
 ### LSP Servers (11)
@@ -261,22 +276,46 @@ Full Neovim configuration via [nixvim](https://github.com/nix-community/nixvim) 
 
 | Key | Action |
 |-----|--------|
-| **File/Find** | |
+| **File/Find (Snacks.picker)** | |
 | `<leader>ff` | Find files |
 | `<leader>fg` | Live grep |
+| `<leader>fw` | Grep word under cursor |
 | `<leader>fb` | Find buffers |
-| `<leader>fh` | Find help |
 | `<leader>fr` | Recent files |
-| `<leader>fd` | LSP definitions |
+| `<leader>fh` | Find help |
+| `<leader>f/` | Fuzzy find in buffer |
+| `<leader>fs` | Document symbols |
+| `<leader>fS` | Workspace symbols |
+| `<leader>fd` | Diagnostics |
+| `<leader>fD` | LSP definitions |
 | `<leader>fi` | LSP implementations |
+| `<leader>fR` | LSP references |
 | `<leader>fy` | LSP type definitions |
-| `<leader>e` | Toggle Neo-tree |
-| **LSP (go to)** | |
-| `gd` | Go to definition (Telescope) |
+| `<leader>fc` | Commands |
+| `<leader>fk` | Keymaps |
+| `<leader>fm` | Marks |
+| `<leader>fq` | Quickfix list |
+| `<leader>fu` | Undo history |
+| `<leader>fp` | Projects |
+| `<leader><space>` | Smart find files |
+| `<leader>,` | Buffers (alt) |
+| `<leader>/` | Grep (alt) |
+| **Explorer (Snacks.explorer)** | |
+| `<leader>e` | Toggle explorer |
+| **Git (Snacks.picker)** | |
+| `<leader>gc` | Git commits |
+| `<leader>gb` | Git branches |
+| `<leader>gs` | Git status |
+| `<leader>gS` | Git stash |
+| `<leader>gd` | Git diff |
+| `<leader>gf` | Git log file |
+| `<leader>gg` | Lazygit |
+| **LSP (go to via Snacks.picker)** | |
+| `gd` | Go to definition |
 | `gD` | Go to declaration |
-| `gr` | Go to references (Telescope) |
-| `gi` | Go to implementation (Telescope) |
-| `gy` | Go to type definition (Telescope) |
+| `gr` | Go to references |
+| `gi` | Go to implementation |
+| `gy` | Go to type definition |
 | `K` | Hover documentation |
 | `<leader>ca` | Code action |
 | `<leader>rn` | Rename symbol |
@@ -292,21 +331,40 @@ Full Neovim configuration via [nixvim](https://github.com/nix-community/nixvim) 
 | `<leader>xw` | Workspace diagnostics |
 | `<leader>xd` | Document diagnostics |
 | `[d` / `]d` | Previous/next diagnostic |
-| **Git** | |
-| `<leader>gb` | Git blame line |
-| `<leader>gd` | Git diff |
+| **Git Hunks (gitsigns)** | |
+| `<leader>hs` | Stage hunk |
+| `<leader>hS` | Stage buffer |
+| `<leader>hr` | Reset hunk |
+| `<leader>hp` | Preview hunk |
+| `<leader>hb` | Blame line |
 | `[c` / `]c` | Previous/next hunk |
 | **Buffers** | |
 | `<Tab>` | Next buffer |
 | `<S-Tab>` | Previous buffer |
 | `<leader>bd` | Delete buffer |
+| `<leader>bp` | Pin buffer |
+| `<leader>bo` | Close other buffers |
 | **Search/Motion** | |
 | `s` | Flash jump |
+| `S` | Flash Treesitter |
 | `f/F/t/T` | Flash char motions |
-| `/` | Search (flash enhanced) |
-| **Terminal** | |
-| `<leader>tt` | Toggle terminal |
-| `<C-\>` | Toggle terminal (any mode) |
+| **Terminal (Snacks.terminal)** | |
+| `<C-\>` | Toggle floating terminal |
+| **Snacks Extra** | |
+| `<leader>z` | Zen mode |
+| `<leader>Z` | Zoom window |
+| `<leader>.` | Scratch buffer |
+| `<leader>n` | Notification history |
+| **UI Toggles (Snacks.toggle)** | |
+| `<leader>us` | Toggle spelling |
+| `<leader>uw` | Toggle wrap |
+| `<leader>ul` | Toggle line numbers |
+| `<leader>uL` | Toggle relative numbers |
+| `<leader>ud` | Toggle diagnostics |
+| `<leader>uh` | Toggle inlay hints |
+| `<leader>ug` | Toggle indent guides |
+| `<leader>uD` | Toggle dim |
+| `<leader>uT` | Toggle Treesitter |
 | **Formatting** | |
 | `<leader>cf` | Format buffer |
 | **Window Navigation** | |
