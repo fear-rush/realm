@@ -1,0 +1,8 @@
+keys:
+  - &maryln age1ppms6tya82fggm97qt85xhjg2tzq9sgmxmp2r8s5gf9f0hhttajs2dlv52
+
+creation_rules:
+  - path_regex: secrets/secrets\.yaml$
+    key_groups:
+      - age:
+          - *maryln
