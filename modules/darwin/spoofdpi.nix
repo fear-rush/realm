@@ -27,4 +27,15 @@ in
       StandardErrorPath = "/var/log/spoofdpi.error.log";
     };
   };
+
+  # Configure macOS proxy bypass for private networks
+  # This is a workaround since --system-proxy routes ALL traffic through SpoofDPI
+  # See README.md for details on this "hacky" configuration
+  system.activationScripts.postActivation.text = ''
+    for service in $(networksetup -listallnetworkservices | tail -n +2); do
+      networksetup -setproxybypassdomains "$service" \
+        "*.local" "169.254/16" "127.0.0.1" "localhost" \
+        "10.0.0.0/8" "172.16.0.0/12" "192.168.0.0/16" 2>/dev/null || true
+    done
+  '';
 }
