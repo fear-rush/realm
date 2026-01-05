@@ -96,8 +96,14 @@
         enable = true;
         servers = {
           ts_ls.enable = true;
-          pyright.enable = true;
-          ruff.enable = true;
+
+          # Python: ruff (linting/formatting)
+          # pyrefly configured manually below (not in nixvim built-in servers)
+          ruff = {
+            enable = true;
+            settings.lineLength = 88;
+          };
+
           rust_analyzer = {
             enable = true;
             installCargo = false;
@@ -234,6 +240,8 @@
           { __unkeyed-1 = "<leader>b"; group = "Buffer"; icon = " "; }
           { __unkeyed-1 = "<leader>d"; group = "Debug/Profiler"; icon = " "; }
           { __unkeyed-1 = "g"; group = "Go to"; }
+          { __unkeyed-1 = "gc"; group = "Comment"; icon = "󰆈 "; }
+          { __unkeyed-1 = "gb"; group = "Block comment"; icon = "󰆈 "; }
           { __unkeyed-1 = "["; group = "Previous"; }
           { __unkeyed-1 = "]"; group = "Next"; }
           { __unkeyed-1 = "ys"; group = "Add surround"; }
@@ -275,7 +283,16 @@
     # ══════════════════════════════════════════════════════════════
     # Extra Plugins
     # ══════════════════════════════════════════════════════════════
+    # Extra packages (LSP servers not in nixvim)
+    extraPackages = with pkgs; [
+      pyrefly   # Python type checker
+      lazygit   # Git TUI (for Snacks.lazygit)
+    ];
+
     extraPlugins = with pkgs.vimPlugins; [
+      # alpha-nvim - Dashboard/greeter
+      alpha-nvim
+
       # vim-visual-multi - Multi-cursor support
       (pkgs.vimUtils.buildVimPlugin {
         name = "vim-visual-multi";
@@ -304,6 +321,16 @@
     # ══════════════════════════════════════════════════════════════
     extraConfigLua = ''
       -- ══════════════════════════════════════════════════════════════
+      -- Pyrefly LSP (Python type checker)
+      -- ══════════════════════════════════════════════════════════════
+      vim.lsp.config.pyrefly = {
+        cmd = { "pyrefly", "lsp" },
+        filetypes = { "python" },
+        root_markers = { "pyproject.toml", "setup.py", "setup.cfg", ".git" },
+      }
+      vim.lsp.enable("pyrefly")
+
+      -- ══════════════════════════════════════════════════════════════
       -- snacks.nvim - All 27 modules enabled with defaults
       -- ══════════════════════════════════════════════════════════════
 
@@ -317,15 +344,8 @@
         -- ── Buffer Delete ──
         bufdelete = { enabled = true },
 
-        -- ── Dashboard ──
-        dashboard = {
-          enabled = true,
-          sections = {
-            { section = "header" },
-            { section = "keys", gap = 1, padding = 1 },
-            { section = "recent_files", limit = 5, padding = 1 },
-          },
-        },
+        -- ── Dashboard (disabled - using alpha-nvim instead) ──
+        dashboard = { enabled = false },
 
         -- ── Dim Inactive ──
         dim = { enabled = true },
@@ -376,6 +396,8 @@
             files = { hidden = true },
             grep = { hidden = true },
             explorer = {
+              hidden = true,   -- show hidden files (dotfiles)
+              ignored = true,  -- show gitignored files (.venv)
               layout = { layout = { position = "right" } },
             },
           },
@@ -477,8 +499,6 @@
 
       -- ── Quick Access ──
       map("n", "<leader><space>", function() Snacks.picker.smart() end, { desc = "Smart find" })
-      map("n", "<leader>,", function() Snacks.picker.buffers() end, { desc = "Buffers" })
-      map("n", "<leader>/", function() Snacks.picker.grep() end, { desc = "Grep" })
 
       -- ── LSP Go-to ──
       map("n", "gd", function() Snacks.picker.lsp_definitions() end, { desc = "Definition" })
@@ -524,6 +544,76 @@
       -- ── Profiler ──
       Snacks.toggle.profiler():map("<leader>dpp")
       Snacks.toggle.profiler_highlights():map("<leader>dph")
+
+      -- ══════════════════════════════════════════════════════════════
+      -- Alpha-nvim Dashboard
+      -- ══════════════════════════════════════════════════════════════
+
+      local alpha = require("alpha")
+
+      -- Load itachi.lua directly (it defines highlight groups and returns header)
+      local itachi_path = vim.fn.expand("~/.config/nix/ascii/itachi.lua")
+      local header = dofile(itachi_path)
+
+      -- Dashboard buttons with Snacks.picker integration
+      local function button(sc, txt, keybind, keybind_opts)
+        local sc_clean = sc:gsub("%s", ""):gsub("SPC", "<leader>")
+        local opts = {
+          position = "center",
+          shortcut = sc,
+          cursor = 3,
+          width = 50,
+          align_shortcut = "right",
+          hl_shortcut = "Keyword",
+          keymap = { "n", sc_clean, keybind, keybind_opts or { noremap = true, silent = true, nowait = true } },
+        }
+        local on_press = function()
+          local key = vim.api.nvim_replace_termcodes(keybind, true, false, true)
+          vim.api.nvim_feedkeys(key, "t", false)
+        end
+        return {
+          type = "button",
+          val = txt,
+          on_press = on_press,
+          opts = opts,
+        }
+      end
+
+      local buttons = {
+        type = "group",
+        val = {
+          button("e", "  New File", "<cmd>ene<CR>"),
+          button("f", "  Find File", "<cmd>lua Snacks.picker.files()<CR>"),
+          button("r", "  Recent Files", "<cmd>lua Snacks.picker.recent()<CR>"),
+          button("g", "  Find Word", "<cmd>lua Snacks.picker.grep()<CR>"),
+          button("c", "  Configuration", "<cmd>e ~/.config/nix/modules/home/neovim.nix<CR>"),
+          button("q", "  Quit", "<cmd>qa<CR>"),
+        },
+        opts = { spacing = 1 },
+      }
+
+      -- Footer with Itachi quote
+      local footer = {
+        type = "text",
+        val = {
+          "",
+          "\"One's Reality Might Be Another's Illusion.\"",
+          "                              - Itachi Uchiha",
+        },
+        opts = { position = "center", hl = "Comment" },
+      }
+
+      -- Layout
+      local layout = {
+        { type = "padding", val = 2 },
+        header,
+        { type = "padding", val = 2 },
+        buttons,
+        { type = "padding", val = 1 },
+        footer,
+      }
+
+      alpha.setup({ layout = layout })
     '';
 
     # ══════════════════════════════════════════════════════════════
@@ -547,9 +637,27 @@
       { mode = ["n" "v"]; key = "<leader>ca"; action = "<cmd>lua vim.lsp.buf.code_action()<CR>"; options.desc = "Code action"; }
       { mode = "n"; key = "<leader>rn"; action = "<cmd>lua vim.lsp.buf.rename()<CR>"; options.desc = "Rename"; }
       { mode = "n"; key = "<leader>cl"; action = "<cmd>lua vim.lsp.codelens.run()<CR>"; options.desc = "CodeLens"; }
+      { mode = "n"; key = "<leader>cr"; action = "<cmd>LspRestart<CR>"; options.desc = "Restart LSP"; }
       { mode = "n"; key = "[d"; action = "<cmd>lua vim.diagnostic.goto_prev()<CR>"; options.desc = "Prev diagnostic"; }
       { mode = "n"; key = "]d"; action = "<cmd>lua vim.diagnostic.goto_next()<CR>"; options.desc = "Next diagnostic"; }
       { mode = "n"; key = "<leader>cd"; action = "<cmd>lua vim.diagnostic.open_float()<CR>"; options.desc = "Show diagnostic"; }
+      {
+        mode = "n";
+        key = "<leader>cy";
+        action.__raw = ''
+          function()
+            local lnum = vim.api.nvim_win_get_cursor(0)[1] - 1
+            local diags = vim.diagnostic.get(0, { lnum = lnum })
+            if #diags > 0 then
+              vim.fn.setreg('+', diags[1].message)
+              vim.notify('Yanked: ' .. diags[1].message, vim.log.levels.INFO)
+            else
+              vim.notify('No diagnostic on this line', vim.log.levels.WARN)
+            end
+          end
+        '';
+        options.desc = "Yank diagnostic";
+      }
 
       # ── Formatting ──
       { mode = "n"; key = "<leader>cf"; action = "<cmd>lua require('conform').format()<CR>"; options.desc = "Format"; }
@@ -576,8 +684,6 @@
       # ── Buffer Navigation ──
       { mode = "n"; key = "<S-h>"; action = "<cmd>bprevious<CR>"; options.desc = "Prev buffer"; }
       { mode = "n"; key = "<S-l>"; action = "<cmd>bnext<CR>"; options.desc = "Next buffer"; }
-      { mode = "n"; key = "<Tab>"; action = "<cmd>bnext<CR>"; options.desc = "Next buffer"; }
-      { mode = "n"; key = "<S-Tab>"; action = "<cmd>bprevious<CR>"; options.desc = "Prev buffer"; }
 
       # ── Indenting ──
       { mode = "v"; key = "<"; action = "<gv"; options.desc = "Indent left"; }
