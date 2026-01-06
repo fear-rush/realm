@@ -6,7 +6,6 @@
     ./aerospace.nix
     ./homebrew.nix
     ./nix.nix
-    ./spoofdpi.nix
     ./openscreen.nix
     ../shared/sops.nix
   ];

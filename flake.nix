@@ -36,10 +36,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    spoofdpi = {
-      url = "github:xvzc/SpoofDPI";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
   };
 
   outputs = inputs@{
@@ -52,7 +48,6 @@
     homebrew-core,
     homebrew-cask,
     sops-nix,
-    spoofdpi,
     ...
   }: {
     darwinConfigurations = {

@@ -31,8 +31,7 @@ My personal Nix configuration for macOS (nix-darwin) with home-manager integrati
     │   ├── system.nix        # System defaults (dock, finder, trackpad)
     │   ├── aerospace.nix     # Window manager configuration
     │   ├── homebrew.nix      # Homebrew casks
-    │   ├── nix.nix           # Nix settings, GC, optimization
-    │   └── spoofdpi.nix      # DPI bypass + encrypted DNS proxy
+    │   └── nix.nix           # Nix settings, GC, optimization
     │
     ├── shared/               # Cross-platform system modules
     │   └── sops.nix          # SOPS secret management
@@ -134,7 +133,6 @@ nix-store --optimise
 | [p7zip](https://github.com/p7zip-project/p7zip) | 7-Zip file archiver with additional codecs | LGPL-2.1+ |
 | zip, unzip, xz, zstd | Compression tools | Various |
 | which, tree | Utilities | Various |
-| [spoofdpi](https://github.com/xvzc/SpoofDPI) | DPI bypass proxy with encrypted DNS | MIT |
 
 ### User Packages (home-manager)
 
@@ -579,54 +577,6 @@ gh dash
 | r | Flatten workspace tree |
 | f | Toggle floating/tiling |
 | backspace | Close all windows but current |
-
-## SpoofDPI (Network Privacy)
-
-SpoofDPI bypasses Deep Packet Inspection (DPI) used by ISPs to block websites.
-It also provides encrypted DNS (DoH) to prevent DNS-based blocking.
-
-### Features
-
-| Feature | Description |
-|---------|-------------|
-| DPI Bypass | Spoofs TLS ClientHello to evade packet inspection |
-| Encrypted DNS | DNS-over-HTTPS to Cloudflare (1.1.1.1) |
-| System Proxy | Automatically configures macOS HTTP/HTTPS proxy |
-| DNS Cache | Caches DNS responses for performance |
-
-### Architecture
-
-```
-┌────────────────────────────────────────────────────────────────┐
-│                         Your Mac                                │
-│  ┌─────────────┐     ┌──────────────────┐     ┌─────────────┐  │
-│  │   Browser   │────▶│     SpoofDPI     │────▶│  Internet   │  │
-│  │   / Apps    │     │ (127.0.0.1:8080) │     │             │  │
-│  └─────────────┘     └──────────────────┘     └─────────────┘  │
-│                              │ DoH (HTTPS)                      │
-│                              ▼                                  │
-│                      ┌──────────────┐                           │
-│                      │ Cloudflare   │                           │
-│                      │ DNS (1.1.1.1)│                           │
-│                      └──────────────┘                           │
-└────────────────────────────────────────────────────────────────┘
-```
-
-### Troubleshooting
-
-| Command | Description |
-|---------|-------------|
-| `sudo launchctl list \| grep spoofdpi` | Check service status |
-| `cat /var/log/spoofdpi.log` | View logs |
-| `cat /var/log/spoofdpi.error.log` | View error logs |
-| `sudo launchctl stop com.spoofdpi.daemon` | Stop service |
-| `sudo launchctl start com.spoofdpi.daemon` | Start service |
-
-**Disable proxy (rollback):**
-```bash
-networksetup -setwebproxystate Wi-Fi off
-networksetup -setsecurewebproxystate Wi-Fi off
-```
 
 ## Adding a New Machine
 
@@ -1074,7 +1024,6 @@ sudo launchctl list | grep nix
 | `org.nixos.nix-gc` | `nix.nix` | Automatic garbage collection. Runs on schedule defined by `nix.gc.interval`. |
 | `org.nixos.nix-optimise` | `nix.nix` | Store deduplication. Runs on schedule defined by `nix.optimise.interval`. |
 | `org.nixos.sops-install-secrets` | `sops-nix` | Decrypts `secrets/secrets.yaml` → `/run/secrets/` during system activation. |
-| `com.spoofdpi.daemon` | `spoofdpi.nix` | DPI bypass proxy with DoH. Always running with `KeepAlive`. |
 
 ### Why "sh" Processes Appear
 
@@ -1108,7 +1057,7 @@ nix.optimise = {
 
 ```bash
 # Check service status
-sudo launchctl list | grep -E 'nix|spoofdpi|sops'
+sudo launchctl list | grep -E 'nix|sops'
 
 # Stop a service
 sudo launchctl stop org.nixos.nix-gc
@@ -1130,7 +1079,6 @@ sudo launchctl print system/org.nixos.nix-daemon
 | [nixvim](https://github.com/nix-community/nixvim) | Neovim configuration in Nix | github:nix-community/nixvim |
 | [nix-homebrew](https://github.com/zhaofengli/nix-homebrew) | Declarative Homebrew management | github:zhaofengli/nix-homebrew |
 | [sops-nix](https://github.com/Mic92/sops-nix) | Secret management with age encryption | github:Mic92/sops-nix |
-| [spoofdpi](https://github.com/xvzc/SpoofDPI) | DPI bypass proxy with DoH | github:xvzc/SpoofDPI |
 
 ## Troubleshooting
 
@@ -1213,21 +1161,8 @@ networksetup -getsecurewebproxy Wi-Fi
 networksetup -listallnetworkservices
 ```
 
-**Manage SpoofDPI service:**
-```bash
-sudo launchctl list | grep spoofdpi
-sudo launchctl stop com.spoofdpi.daemon
-sudo launchctl start com.spoofdpi.daemon
-```
-
-**Disable proxy (emergency rollback):**
+**Disable proxy:**
 ```bash
 networksetup -setwebproxystate Wi-Fi off
 networksetup -setsecurewebproxystate Wi-Fi off
-```
-
-**View SpoofDPI logs:**
-```bash
-cat /var/log/spoofdpi.log
-cat /var/log/spoofdpi.error.log
 ```
