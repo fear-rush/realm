@@ -57,13 +57,15 @@
       enable = true;
       settings = {
         flavour = "mocha";
-        transparent_background = false;
+        transparent_background = true;
         integrations = {
           gitsigns = true;
           native_lsp.enabled = true;
           treesitter = true;
           which_key = true;
           flash = true;
+          blink_cmp = true;
+          bufferline = true;
         };
       };
     };
@@ -75,6 +77,27 @@
       # ── UI ──
       lualine.enable = true;
       web-devicons.enable = true;
+
+      # ── Bufferline (VSCode-like tabs) ──
+      bufferline = {
+        enable = true;
+        settings.options = {
+          mode = "buffers";
+          diagnostics = "nvim_lsp";
+          separator_style = "thin";
+          show_buffer_close_icons = true;
+          show_close_icon = false;
+          always_show_bufferline = true;
+          offsets = [
+            {
+              filetype = "snacks_layout_box";
+              text = "Explorer";
+              highlight = "Directory";
+              separator = true;
+            }
+          ];
+        };
+      };
 
       # ── Syntax Highlighting ──
       treesitter = {
@@ -233,11 +256,12 @@
           { __unkeyed-1 = "<leader>c"; group = "Code"; icon = " "; }
           { __unkeyed-1 = "<leader>g"; group = "Git"; icon = "󰊢 "; }
           { __unkeyed-1 = "<leader>h"; group = "Git Hunk"; icon = " "; }
-          { __unkeyed-1 = "<leader>x"; group = "Diagnostics"; icon = "󱖫 "; }
+          { __unkeyed-1 = "<leader>x"; group = "Trouble"; icon = "󱖫 "; }
           { __unkeyed-1 = "<leader>s"; group = "Search/Split"; icon = " "; }
           { __unkeyed-1 = "<leader>t"; group = "Toggle"; icon = " "; }
           { __unkeyed-1 = "<leader>u"; group = "UI Toggle"; icon = "󰙵 "; }
           { __unkeyed-1 = "<leader>b"; group = "Buffer"; icon = " "; }
+          { __unkeyed-1 = "<leader>w"; group = "Window"; icon = " "; }
           { __unkeyed-1 = "<leader>d"; group = "Debug/Profiler"; icon = " "; }
           { __unkeyed-1 = "g"; group = "Go to"; }
           { __unkeyed-1 = "gc"; group = "Comment"; icon = "󰆈 "; }
@@ -276,6 +300,15 @@
         settings = {
           use_default_keymaps = false;
           max_join_length = 120;
+        };
+      };
+
+      # ── Trouble (Diagnostics Panel) ──
+      trouble = {
+        enable = true;
+        settings = {
+          auto_close = true;
+          focus = true;
         };
       };
     };
@@ -477,9 +510,16 @@
       map("n", "<leader>fS", function() Snacks.picker.lsp_workspace_symbols() end, { desc = "Workspace symbols" })
 
       -- ── Picker (Diagnostics/LSP) ──
-      map("n", "<leader>fd", function() Snacks.picker.diagnostics() end, { desc = "Diagnostics" })
-      map("n", "<leader>xd", function() Snacks.picker.diagnostics_buffer() end, { desc = "Buffer diagnostics" })
-      map("n", "<leader>xx", function() Snacks.picker.diagnostics() end, { desc = "Workspace diagnostics" })
+      map("n", "<leader>fd", function() Snacks.picker.diagnostics() end, { desc = "Diagnostics (picker)" })
+
+      -- ── Trouble (Diagnostics Panel) ──
+      map("n", "<leader>xx", "<cmd>Trouble diagnostics toggle<CR>", { desc = "Toggle Trouble" })
+      map("n", "<leader>xd", "<cmd>Trouble diagnostics toggle filter.buf=0<CR>", { desc = "Buffer diagnostics" })
+      map("n", "<leader>xw", "<cmd>Trouble diagnostics toggle<CR>", { desc = "Workspace diagnostics" })
+      map("n", "<leader>xq", "<cmd>Trouble qflist toggle<CR>", { desc = "Quickfix list" })
+      map("n", "<leader>xl", "<cmd>Trouble loclist toggle<CR>", { desc = "Location list" })
+      map("n", "<leader>xr", "<cmd>Trouble lsp_references toggle<CR>", { desc = "LSP references" })
+      map("n", "<leader>xs", "<cmd>Trouble symbols toggle focus=false<CR>", { desc = "Symbols outline" })
 
       -- ── Picker (Git) ──
       map("n", "<leader>gc", function() Snacks.picker.git_log() end, { desc = "Git commits" })
@@ -633,11 +673,12 @@
       # ── LSP ──
       { mode = "n"; key = "gD"; action = "<cmd>lua vim.lsp.buf.declaration()<CR>"; options.desc = "Declaration"; }
       { mode = "n"; key = "K"; action = "<cmd>lua vim.lsp.buf.hover()<CR>"; options.desc = "Hover"; }
-      { mode = ["n" "i"]; key = "<C-k>"; action = "<cmd>lua vim.lsp.buf.signature_help()<CR>"; options.desc = "Signature"; }
+      { mode = "i"; key = "<C-k>"; action = "<cmd>lua vim.lsp.buf.signature_help()<CR>"; options.desc = "Signature"; }
+      { mode = "n"; key = "<leader>cs"; action = "<cmd>lua vim.lsp.buf.signature_help()<CR>"; options.desc = "Signature help"; }
       { mode = ["n" "v"]; key = "<leader>ca"; action = "<cmd>lua vim.lsp.buf.code_action()<CR>"; options.desc = "Code action"; }
-      { mode = "n"; key = "<leader>rn"; action = "<cmd>lua vim.lsp.buf.rename()<CR>"; options.desc = "Rename"; }
+      { mode = "n"; key = "<leader>cr"; action = "<cmd>lua vim.lsp.buf.rename()<CR>"; options.desc = "Rename"; }
       { mode = "n"; key = "<leader>cl"; action = "<cmd>lua vim.lsp.codelens.run()<CR>"; options.desc = "CodeLens"; }
-      { mode = "n"; key = "<leader>cr"; action = "<cmd>LspRestart<CR>"; options.desc = "Restart LSP"; }
+      { mode = "n"; key = "<leader>cR"; action = "<cmd>LspRestart<CR>"; options.desc = "Restart LSP"; }
       { mode = "n"; key = "[d"; action = "<cmd>lua vim.diagnostic.goto_prev()<CR>"; options.desc = "Prev diagnostic"; }
       { mode = "n"; key = "]d"; action = "<cmd>lua vim.diagnostic.goto_next()<CR>"; options.desc = "Next diagnostic"; }
       { mode = "n"; key = "<leader>cd"; action = "<cmd>lua vim.diagnostic.open_float()<CR>"; options.desc = "Show diagnostic"; }
@@ -680,6 +721,15 @@
       { mode = "n"; key = "<C-j>"; action = "<C-w>j"; options.desc = "Down window"; }
       { mode = "n"; key = "<C-k>"; action = "<C-w>k"; options.desc = "Up window"; }
       { mode = "n"; key = "<C-l>"; action = "<C-w>l"; options.desc = "Right window"; }
+
+      # ── Window Management ──
+      { mode = "n"; key = "<leader>wv"; action = "<cmd>vsplit<CR>"; options.desc = "Split vertical"; }
+      { mode = "n"; key = "<leader>wh"; action = "<cmd>split<CR>"; options.desc = "Split horizontal"; }
+      { mode = "n"; key = "<leader>wq"; action = "<cmd>close<CR>"; options.desc = "Close window"; }
+      { mode = "n"; key = "<leader>wo"; action = "<cmd>only<CR>"; options.desc = "Close other windows"; }
+      { mode = "n"; key = "<leader>w="; action = "<C-w>="; options.desc = "Equal window size"; }
+      { mode = "n"; key = "<leader>|"; action = "<cmd>vsplit<CR>"; options.desc = "Split vertical"; }
+      { mode = "n"; key = "<leader>-"; action = "<cmd>split<CR>"; options.desc = "Split horizontal"; }
 
       # ── Buffer Navigation ──
       { mode = "n"; key = "<S-h>"; action = "<cmd>bprevious<CR>"; options.desc = "Prev buffer"; }
