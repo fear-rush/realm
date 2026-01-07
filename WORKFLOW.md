@@ -26,23 +26,18 @@ This documentation covers your complete Nix-based development environment on mac
 | **catppuccin** | Soothing pastel color scheme (Mocha flavor) | [GitHub](https://github.com/catppuccin/nvim) |
 | **lualine.nvim** | Fast and customizable status line | [GitHub](https://github.com/nvim-lualine/lualine.nvim) |
 | **bufferline.nvim** | VSCode-like buffer tabs | [GitHub](https://github.com/akinsho/bufferline.nvim) |
-| **neo-tree.nvim** | File explorer with git integration | [GitHub](https://github.com/nvim-neo-tree/neo-tree.nvim) |
-| **telescope.nvim** | Fuzzy finder for files, grep, and more | [GitHub](https://github.com/nvim-telescope/telescope.nvim) |
+| **snacks.nvim** | Batteries-included plugin collection (picker, explorer, terminal, indent, notifier, lazygit, zen, etc.) | [GitHub](https://github.com/folke/snacks.nvim) |
 | **nvim-treesitter** | Advanced syntax highlighting | [GitHub](https://github.com/nvim-treesitter/nvim-treesitter) |
-| **toggleterm.nvim** | Toggleable floating terminal | [GitHub](https://github.com/akinsho/toggleterm.nvim) |
 | **gitsigns.nvim** | Git signs and hunk operations | [GitHub](https://github.com/lewis6991/gitsigns.nvim) |
 | **which-key.nvim** | Keybinding help popup | [GitHub](https://github.com/folke/which-key.nvim) |
 | **trouble.nvim** | Diagnostics and quickfix panel | [GitHub](https://github.com/folke/trouble.nvim) |
 | **flash.nvim** | Quick navigation with labels | [GitHub](https://github.com/folke/flash.nvim) |
 | **blink-cmp** | Fast completion engine | [GitHub](https://github.com/Saghen/blink.cmp) |
 | **conform.nvim** | Code formatter | [GitHub](https://github.com/stevearc/conform.nvim) |
-| **comment.nvim** | Toggle comments | [GitHub](https://github.com/numToStr/Comment.nvim) |
 | **nvim-surround** | Surround text with pairs | [GitHub](https://github.com/kylechui/nvim-surround) |
-| **todo-comments.nvim** | Highlight TODO/FIXME comments | [GitHub](https://github.com/folke/todo-comments.nvim) |
 | **treesj** | Split/join code blocks | [GitHub](https://github.com/Wansmer/treesj) |
-| **indent-blankline** | Visual indent guides | [GitHub](https://github.com/lukas-reineke/indent-blankline.nvim) |
-| **fidget.nvim** | LSP progress notifications | [GitHub](https://github.com/j-hui/fidget.nvim) |
 | **alpha-nvim** | Dashboard/start screen | [GitHub](https://github.com/goolord/alpha-nvim) |
+| **vim-visual-multi** | Multi-cursor support (Ctrl+N like VS Code) | [GitHub](https://github.com/mg979/vim-visual-multi) |
 | **web-devicons** | File type icons | [GitHub](https://github.com/nvim-tree/nvim-web-devicons) |
 
 ## 1.2 LSP Servers (Language Support)
@@ -50,7 +45,7 @@ This documentation covers your complete Nix-based development environment on mac
 | Language | Server | Reference |
 |----------|--------|-----------|
 | TypeScript/JavaScript | ts_ls | [GitHub](https://github.com/typescript-language-server/typescript-language-server) |
-| Python | pyright | [GitHub](https://github.com/microsoft/pyright) |
+| Python (type checking) | pyrefly | [GitHub](https://github.com/pyre-check/pyre-check) |
 | Python (linting) | ruff | [GitHub](https://github.com/astral-sh/ruff) |
 | Rust | rust-analyzer | [GitHub](https://github.com/rust-lang/rust-analyzer) |
 | Go | gopls | [GitHub](https://github.com/golang/tools/tree/master/gopls) |
@@ -96,7 +91,6 @@ This documentation covers your complete Nix-based development environment on mac
 | **nix-darwin** | Nix-based macOS configuration | [GitHub](https://github.com/LnL7/nix-darwin) |
 | **home-manager** | Nix-based user environment | [GitHub](https://github.com/nix-community/home-manager) |
 | **aerospace** | Tiling window manager | [GitHub](https://github.com/nikitabobko/AeroSpace) |
-| **spoofdpi** | DPI circumvention proxy | [GitHub](https://github.com/xvzc/SpoofDPI) |
 | **sops-nix** | Secret management | [GitHub](https://github.com/Mic92/sops-nix) |
 
 ## 1.6 GUI Applications (Homebrew Casks)
@@ -153,7 +147,7 @@ When Neovim starts, you'll see the **Alpha dashboard** with quick actions:
 
 ## 2.3 File Navigation
 
-### Opening Files with Telescope
+### Opening Files with Snacks.picker
 
 | Key | Action |
 |-----|--------|
@@ -162,40 +156,38 @@ When Neovim starts, you'll see the **Alpha dashboard** with quick actions:
 | `<leader>fg` | Live grep (search text in all files) |
 | `<leader>fw` | Search word under cursor |
 | `<leader>fb` | List open buffers |
+| `<leader>fj` | Jump list |
+| `<leader>f/` | Buffer lines |
+| `<leader>fs` | Document symbols |
+| `<leader>fS` | Workspace symbols |
+| `<leader><space>` | Smart find files |
 
-**Inside Telescope picker:**
-- `Ctrl+n` / `Ctrl+p` - Navigate up/down
+**Inside Snacks picker:**
+- `j` / `k` or `Ctrl+n` / `Ctrl+p` - Navigate up/down
 - `Enter` - Open file
 - `Ctrl+x` - Open in horizontal split
 - `Ctrl+v` - Open in vertical split
-- `Ctrl+t` - Open in new tab
-- `Esc` - Close picker
+- `Esc` or `q` - Close picker
 
-### Using Neo-tree (File Explorer)
+### Using Snacks.explorer (File Explorer)
 
 | Key | Action |
 |-----|--------|
 | `<leader>e` | Toggle file explorer |
 
-**Inside Neo-tree:**
+**Inside Snacks.explorer:**
 | Key | Action |
 |-----|--------|
-| `Enter` or `o` | Open file/folder |
-| `a` | Create new file |
-| `A` | Create new directory |
+| `Enter` or `l` | Open file/expand folder |
+| `h` | Collapse folder / go to parent |
+| `a` | Add new file/directory |
 | `d` | Delete file |
 | `r` | Rename file |
-| `y` | Copy file |
-| `x` | Cut file |
+| `c` | Copy file |
+| `m` | Move/cut file |
 | `p` | Paste file |
-| `H` | Toggle hidden files |
-| `.` | Set as root directory |
-| `<BS>` (Backspace) | Go up one directory |
-| `s` | Open in vertical split |
-| `S` | Open in horizontal split |
-| `P` | Toggle preview |
+| `.` | Toggle hidden files |
 | `q` | Close explorer |
-| `?` | Show help |
 
 ## 2.4 Buffer Management (Tabs)
 
@@ -361,7 +353,7 @@ Completion appears automatically as you type.
 | `Tab` | Jump to next snippet placeholder |
 | `Shift+Tab` | Jump to previous placeholder |
 
-## 2.10 Floating Terminal
+## 2.10 Floating Terminal (Snacks.terminal)
 
 | Key | Action |
 |-----|--------|
@@ -383,6 +375,11 @@ npm run dev    # Run development server
 - Press `q` to quit yazi
 - If keys don't work, press `i` to enter terminal mode first
 
+**Lazygit integration:**
+| Key | Action |
+|-----|--------|
+| `<leader>gg` | Open Lazygit in floating window |
+
 ## 2.11 Git Operations
 
 ### Gitsigns (Hunk Operations)
@@ -401,7 +398,7 @@ npm run dev    # Run development server
 | `<leader>hd` | Diff this file |
 | `<leader>tb` | Toggle blame on current line |
 
-### Telescope Git Pickers
+### Snacks.picker Git
 
 | Key | Action |
 |-----|--------|
@@ -409,6 +406,8 @@ npm run dev    # Run development server
 | `<leader>gb` | Git branches |
 | `<leader>gs` | Git status |
 | `<leader>gS` | Git stash |
+| `<leader>gd` | Git diff |
+| `<leader>gB` | Browse in GitHub |
 
 ## 2.12 Diagnostics Panel (Trouble)
 
@@ -431,16 +430,15 @@ npm run dev    # Run development server
 | `p` | Preview |
 | `q` | Close panel |
 
-## 2.13 Comments
+## 2.13 Comments (Native Neovim)
+
+Neovim has built-in commenting support via treesitter.
 
 | Key | Action |
 |-----|--------|
 | `gcc` | Toggle comment on line |
-| `gc{motion}` | Comment with motion |
-| `gbc` | Toggle block comment |
-| `gcO` | Add comment above |
-| `gco` | Add comment below |
-| `gcA` | Add comment at end of line |
+| `gc{motion}` | Comment with motion (e.g., `gcip` for paragraph) |
+| `gbc` | Toggle block comment on line |
 
 **Visual mode:**
 | Key | Action |
@@ -463,7 +461,28 @@ npm run dev    # Run development server
 - `ds"` - Delete surrounding `"`
 - `cs"'` - Change `"` to `'`
 
-## 2.15 Which-Key Help
+## 2.15 Multi-Cursor (vim-visual-multi)
+
+| Key | Action |
+|-----|--------|
+| `Ctrl+n` | Select word under cursor / add next occurrence |
+| `Ctrl+Down` | Add cursor below |
+| `Ctrl+Up` | Add cursor above |
+| `\\A` | Select all occurrences of word |
+| `\\/` | Start regex search |
+| `n` / `N` | Go to next/previous match |
+| `q` | Skip current and go to next |
+| `Q` | Remove current selection |
+| `Tab` | Switch between cursor and extend mode |
+
+**Workflow example:**
+1. Place cursor on a word
+2. Press `Ctrl+n` to select it
+3. Press `Ctrl+n` again to select next occurrence
+4. Type to edit all selections at once
+5. Press `Esc` to exit multi-cursor mode
+
+## 2.16 Which-Key Help
 
 Press `<leader>` (Space) and wait 300ms to see all available keybindings organized by category.
 
@@ -669,7 +688,7 @@ yazi
 # Navigate with h/j/k/l, press Enter to open
 
 # Method 2: In neovim
-# Press <leader>e to open Neo-tree
+# Press <leader>e to open Snacks.explorer
 ```
 
 ### Git Workflow
@@ -697,7 +716,7 @@ Your leader key is `Space`. All `<leader>` keymaps start with Space.
 
 | Prefix | Category |
 |--------|----------|
-| `<leader>f` | Find/Telescope |
+| `<leader>f` | Find (Snacks.picker) |
 | `<leader>b` | Buffer |
 | `<leader>c` | Code/LSP |
 | `<leader>g` | Git |
@@ -712,17 +731,18 @@ Your leader key is `Space`. All `<leader>` keymaps start with Space.
 ```
 Space           Leader key
 Esc             Normal mode / Clear search
-Ctrl+\          Toggle terminal
+Ctrl+\          Toggle terminal (Snacks)
 Tab/Shift+Tab   Next/Previous buffer
 ```
 
-### File Operations
+### File Operations (Snacks.picker)
 ```
 <leader>e       Toggle file explorer
 <leader>ff      Find files
 <leader>fg      Live grep
 <leader>fr      Recent files
 <leader>fb      Buffers
+<leader><space> Smart find files
 ```
 
 ### Code
@@ -730,7 +750,7 @@ Tab/Shift+Tab   Next/Previous buffer
 gd              Go to definition
 K               Hover docs
 <leader>ca      Code actions
-<leader>rn      Rename
+<leader>cr      Rename
 <leader>cf      Format
 ```
 
@@ -738,6 +758,7 @@ K               Hover docs
 ```
 <leader>gs      Git status
 <leader>gc      Git commits
+<leader>gg      Lazygit
 ]c / [c         Next/Previous hunk
 <leader>hs      Stage hunk
 ```
@@ -745,17 +766,24 @@ K               Hover docs
 ### Windows
 ```
 Ctrl+h/j/k/l    Navigate windows
-Ctrl+w v        Vertical split
-Ctrl+w s        Horizontal split
-Ctrl+w q        Close window
+<leader>wv      Vertical split
+<leader>wh      Horizontal split
+<leader>wq      Close window
 ```
 
 ### Editing
 ```
-gcc             Toggle comment
+<C-n>           Multi-cursor (select word)
 ys{motion}"     Add surround
 ds"             Delete surround
 s               Flash jump
+```
+
+### Snacks Extra
+```
+<leader>z       Zen mode
+<leader>.       Scratch buffer
+<leader>n       Notification history
 ```
 
 ---
