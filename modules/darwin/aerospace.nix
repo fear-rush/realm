@@ -14,7 +14,7 @@
       default-root-container-orientation = "auto";
       on-focused-monitor-changed = [ "move-mouse monitor-lazy-center" ];
       automatically-unhide-macos-hidden-apps = false;
-      persistent-workspaces = [ "1" "2" "3" "4" "5" "b" "m" "t" "e" ];
+      persistent-workspaces = [ "1" "2" "3" "4" "5" "c" "m" "t" "e" ];
       on-mode-changed = [];
       accordion-padding = 30;
 
@@ -47,7 +47,7 @@
         alt-3 = "workspace 3";
         alt-4 = "workspace 4";
         alt-5 = "workspace 5";
-        alt-b = "workspace b";
+        alt-c = "workspace c";
         alt-m = "workspace m";
         alt-t = "workspace t";
         alt-e = "workspace e";
@@ -56,7 +56,7 @@
         alt-shift-3 = "move-node-to-workspace 3";
         alt-shift-4 = "move-node-to-workspace 4";
         alt-shift-5 = "move-node-to-workspace 5";
-        alt-shift-b = "move-node-to-workspace b";
+        alt-shift-c = "move-node-to-workspace c";
         alt-shift-m = "move-node-to-workspace m";
         alt-shift-t = "move-node-to-workspace t";
         alt-shift-e = "move-node-to-workspace e";
