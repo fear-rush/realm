@@ -3,6 +3,9 @@
 {
   homebrew = {
     enable = true;
+    brews = [
+      "llama.cpp"
+    ];
     casks = [
       "google-chrome"
       "obsidian"

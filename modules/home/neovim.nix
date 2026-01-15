@@ -120,8 +120,8 @@
         servers = {
           ts_ls.enable = true;
 
-          # Python: ruff (linting/formatting)
-          # pyrefly configured manually below (not in nixvim built-in servers)
+          # Python: ruff (linting/formatting) + pyright (type checking)
+          pyright.enable = true;
           ruff = {
             enable = true;
             settings.lineLength = 88;
@@ -318,7 +318,6 @@
     # ══════════════════════════════════════════════════════════════
     # Extra packages (LSP servers not in nixvim)
     extraPackages = with pkgs; [
-      pyrefly   # Python type checker
       lazygit   # Git TUI (for Snacks.lazygit)
     ];
 
@@ -353,16 +352,6 @@
     # Snacks.nvim Configuration (ALL Modules Enabled)
     # ══════════════════════════════════════════════════════════════
     extraConfigLua = ''
-      -- ══════════════════════════════════════════════════════════════
-      -- Pyrefly LSP (Python type checker)
-      -- ══════════════════════════════════════════════════════════════
-      vim.lsp.config.pyrefly = {
-        cmd = { "pyrefly", "lsp" },
-        filetypes = { "python" },
-        root_markers = { "pyproject.toml", "setup.py", "setup.cfg", ".git" },
-      }
-      vim.lsp.enable("pyrefly")
-
       -- ══════════════════════════════════════════════════════════════
       -- snacks.nvim - All 27 modules enabled with defaults
       -- ══════════════════════════════════════════════════════════════

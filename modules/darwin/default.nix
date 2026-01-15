@@ -7,6 +7,7 @@
     ./homebrew.nix
     ./nix.nix
     ./openscreen.nix
+    ./devtools.nix
     ../shared/sops.nix
   ];
 
