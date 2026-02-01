@@ -5,8 +5,10 @@
     enable = true;
     brews = [
       "llama.cpp"
+      "platformio"
     ];
     casks = [
+      "android-platform-tools"
       "google-chrome"
       "obsidian"
       "bruno"
@@ -19,7 +21,7 @@
       "tableplus"
       "vlc"
       "claude-code"
-      "zed"
+      "visual-studio-code"
       "keepassxc"
     ];
     onActivation = {

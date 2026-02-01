@@ -105,6 +105,10 @@ nix flake lock --update-input nixpkgs
 nix flake lock --update-input home-manager
 nix flake lock --update-input nixvim
 nix flake lock --update-input sops-nix
+
+# Update Homebrew cask definitions (required for cask upgrades)
+nix flake update homebrew-cask --flake ~/.config/nix
+nix flake update homebrew-core --flake ~/.config/nix
 ```
 
 ### Garbage Collection
@@ -1120,6 +1124,26 @@ sops.secrets.my_secret = {
   owner = "maryln";  # Must match your username
   mode = "0400";
 };
+```
+
+### Homebrew casks not upgrading
+
+nix-homebrew pins the `homebrew-cask` tap to the revision locked in `flake.lock`. Even with `autoUpdate = true` and `upgrade = true` in `homebrew.nix`, Homebrew only sees cask versions from that pinned revision — not the live Homebrew registry.
+
+**Fix:** Update the flake input before rebuilding:
+```bash
+nix flake update homebrew-cask --flake ~/.config/nix
+sudo darwin-rebuild switch --flake ~/.config/nix
+```
+
+If `nix flake update` fails with **Permission denied on `flake.lock`**, it means `flake.lock` (or `.git/objects`) is owned by root from a previous `sudo darwin-rebuild` run:
+```bash
+# Fix ownership
+sudo chown -R $(whoami) ~/.config/nix
+
+# Then update and rebuild
+nix flake update homebrew-cask --flake ~/.config/nix
+sudo darwin-rebuild switch --flake ~/.config/nix
 ```
 
 ### Homebrew issues
