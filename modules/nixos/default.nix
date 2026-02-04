@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./immich.nix
     ./laptop.nix
     ./networking.nix
     ./ssh.nix
