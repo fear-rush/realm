@@ -58,9 +58,4 @@
     "vm.dirty_ratio" = 60;
     "vm.dirty_background_ratio" = 2;
   };
-
-  # Swap partition
-  swapDevices = [{
-    device = "/dev/sda2";
-  }];
 }
