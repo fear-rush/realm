@@ -38,8 +38,19 @@
   services.xserver.enable = false;
   services.displayManager.enable = false;
 
-  # Blank console screen after 60 seconds of inactivity
+  # Blank console screen after 1 min, power down display after 2 min
   boot.kernelParams = [ "consoleblank=60" ];
+  systemd.services.console-blank = {
+    description = "Blank console screen and power down display";
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig = {
+      Type = "oneshot";
+      Environment = "TERM=linux";
+      StandardOutput = "tty";
+      TTYPath = "/dev/console";
+      ExecStart = "${pkgs.util-linux}/bin/setterm --blank 1 --powerdown 2 --powersave on";
+    };
+  };
 
   # Firmware updates
   hardware.enableRedistributableFirmware = true;
