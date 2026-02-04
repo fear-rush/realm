@@ -4,7 +4,6 @@
   imports = [
     ./laptop.nix
     ./networking.nix
-    ./portainer.nix
     ./ssh.nix
     ./users.nix
   ];

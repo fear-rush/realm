@@ -6,11 +6,11 @@
     enable = true;
 
     settings = {
-      PermitRootLogin = "no";
+      PermitRootLogin = "prohibit-password"; # Key-only for root
       PasswordAuthentication = false;
       KbdInteractiveAuthentication = false;
 
-      AllowUsers = [ "server" ];
+      AllowUsers = [ "server" "root" ];
 
       Ciphers = [
         "chacha20-poly1305@openssh.com"
@@ -33,30 +33,13 @@
       LoginGraceTime = 60;
     };
 
+    # Allow password auth only for server user
+    extraConfig = ''
+      Match User server
+        PasswordAuthentication yes
+    '';
+
     ports = [ 22 ];
     openFirewall = true;
-  };
-
-  # Fail2ban for brute force protection
-  services.fail2ban = {
-    enable = true;
-    maxretry = 5;
-    bantime = "1h";
-    bantime-increment = {
-      enable = true;
-      maxtime = "48h";
-      factor = "4";
-    };
-
-    jails = {
-      sshd = {
-        settings = {
-          enabled = true;
-          port = "ssh";
-          filter = "sshd";
-          maxretry = 3;
-        };
-      };
-    };
   };
 }

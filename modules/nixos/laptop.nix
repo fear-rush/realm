@@ -18,9 +18,7 @@
     lidSwitchExternalPower = "ignore";
     lidSwitchDocked = "ignore";
 
-    extraConfig = ''
-      HandlePowerKey=ignore
-    '';
+    settings.Login.HandlePowerKey = "ignore";
   };
 
   # Disable sleep/suspend

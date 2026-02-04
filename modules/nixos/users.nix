@@ -1,21 +1,17 @@
 { config, pkgs, ... }:
 
 {
-  # Disable root login
-  users.users.root.hashedPassword = "!";
+  # Root - SSH key only
+  users.users.root.openssh.authorizedKeys.keys = [
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIhjnmrkuXxq0lM2pM2WYy1WcgPXY3CLqO6bhRCd+5u1 firas"
+  ];
 
-  # Main user
+  # Main user - password auth via SSH
   users.users.server = {
     isNormalUser = true;
     description = "Server Admin";
     extraGroups = [
       "wheel"
-      "docker"
-    ];
-
-    # SSH public keys - REPLACE WITH YOUR KEY
-    openssh.authorizedKeys.keys = [
-      "ssh-ed25519 AAAA... your-public-key-here"
     ];
 
     shell = pkgs.bash;
