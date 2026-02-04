@@ -13,12 +13,11 @@
   services.thermald.enable = true;
 
   # Ignore lid close - keep running when lid is closed
-  services.logind = {
-    lidSwitch = "ignore";
-    lidSwitchExternalPower = "ignore";
-    lidSwitchDocked = "ignore";
-
-    settings.Login.HandlePowerKey = "ignore";
+  services.logind.settings.Login = {
+    HandleLidSwitch = "ignore";
+    HandleLidSwitchExternalPower = "ignore";
+    HandleLidSwitchDocked = "ignore";
+    HandlePowerKey = "ignore";
   };
 
   # Disable sleep/suspend
@@ -34,7 +33,6 @@
 
   # Disable sound (not needed for server)
   services.pulseaudio.enable = false;
-  hardware.pulseaudio.enable = false;
 
   # Disable GUI - headless server
   services.xserver.enable = false;
@@ -42,12 +40,6 @@
 
   # Firmware updates
   hardware.enableRedistributableFirmware = true;
-
-  # Filesystem optimizations for HDD
-  services.fstrim = {
-    enable = true;
-    interval = "weekly";
-  };
 
   # Kernel tweaks for i3-2310M server workload (8GB DDR3)
   boot.kernel.sysctl = {
@@ -67,9 +59,8 @@
     "vm.dirty_background_ratio" = 2;
   };
 
-  # Swap configuration - 8GB to match RAM
+  # Swap partition
   swapDevices = [{
     device = "/dev/sda2";
-    size = null; # Use full partition
   }];
 }

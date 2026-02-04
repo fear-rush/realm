@@ -12,7 +12,8 @@
   # Boot loader - GRUB for BIOS/MBR
   boot.loader.grub = {
     enable = true;
-    device = "/dev/sda"; # Adjust to your disk
+    device = "/dev/sda";
+    configurationLimit = 10;
   };
 
   # Timezone

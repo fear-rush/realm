@@ -17,18 +17,9 @@
     shell = pkgs.bash;
   };
 
-  # Sudo configuration
+  # Sudo - wheel group gets NOPASSWD
   security.sudo = {
     enable = true;
     wheelNeedsPassword = false;
-
-    extraRules = [
-      {
-        users = [ "server" ];
-        commands = [
-          { command = "ALL"; options = [ "NOPASSWD" ]; }
-        ];
-      }
-    ];
   };
 }
