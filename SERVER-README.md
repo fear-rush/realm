@@ -4,6 +4,118 @@ NixOS headless server running on a repurposed laptop (Intel i3-2310M, 8GB DDR3, 
 
 ---
 
+## Network Architecture
+
+```
+ REMOTE (anywhere in the world)                        LOCAL NETWORK (192.168.100.0/24)
+ ──────────────────────────────                        ────────────────────────────────
+
+ ┌─────────────────────┐                               ┌─────────────────────┐
+ │  Phone / Laptop     │                               │  Mac (manson)       │
+ │                     │                               │  192.168.100.x      │
+ │  Tailscale app      │                               │                     │
+ │  Immich app         │                               │  Tailscale app      │
+ └────────┬────────────┘                               └────────┬────────────┘
+          │                                                     │
+          │  WireGuard tunnel                                   │  LAN + WireGuard tunnel
+          │  (encrypted, peer-to-peer)                          │
+          │                                                     │
+          ▼                                                     ▼
+ ┌─────────────────────────────────────────────────────────────────────────────────────┐
+ │                              Tailscale Coordination                                │
+ │                          (NAT traversal, key exchange)                              │
+ └─────────────────────────────────────────┬───────────────────────────────────────────┘
+                                           │
+               ┌───────────────────────────┼───────────────────────────┐
+               │                           │                           │
+               ▼                           ▼                           ▼
+ ┌──────────────────────────────────────────────────────────────────────────────────────┐
+ │                                                                                     │
+ │   SHISUI  (Intel i3-2310M / 8GB DDR3 / 464GB HDD)                                  │
+ │   NixOS Headless Server                                                             │
+ │                                                                                     │
+ │   ┌─────────────────────────────────────────────────────────────────────────────┐    │
+ │   │  NETWORK INTERFACES                                                        │    │
+ │   │                                                                             │    │
+ │   │   wlp2s0 (WiFi)              tailscale0 (VPN)                               │    │
+ │   │   192.168.100.10              100.x.x.x                                     │    │
+ │   │   ┌─────────────────┐         ┌──────────────────────┐                      │    │
+ │   │   │ Firewall: STRICT│         │ Firewall: TRUSTED    │                      │    │
+ │   │   │ TCP 22   (SSH)  │         │ All ports open to    │                      │    │
+ │   │   │ TCP 80   (HTTP) │         │ Tailscale nodes      │                      │    │
+ │   │   │ TCP 443  (HTTPS)│         │                      │                      │    │
+ │   │   │ TCP 2283 (Immich│         │                      │                      │    │
+ │   │   │ UDP 41641 (TS)  │         │                      │                      │    │
+ │   │   └────────┬────────┘         └──────────┬───────────┘                      │    │
+ │   │            └──────────────┬──────────────┘                                  │    │
+ │   └───────────────────────────┼─────────────────────────────────────────────────┘    │
+ │                               │                                                     │
+ │   ┌───────────────────────────┼─────────────────────────────────────────────────┐    │
+ │   │  SERVICES                 │                                                 │    │
+ │   │                           ▼                                                 │    │
+ │   │   ┌──────────────────────────────────────────────────────────┐               │    │
+ │   │   │  SSH (port 22)                                  ssh.nix │               │    │
+ │   │   │                                                         │               │    │
+ │   │   │   root ──── key-only (prohibit-password)                │               │    │
+ │   │   │              └─ ed25519 (firas)                         │               │    │
+ │   │   │                                                         │               │    │
+ │   │   │   server ── key-only (2 authorized keys)                │               │    │
+ │   │   │              ├─ ed25519 (firas)                         │               │    │
+ │   │   │              └─ ed25519 (key #2)                        │               │    │
+ │   │   │                                                         │               │    │
+ │   │   │   Hardened: chacha20-poly1305, curve25519, 3 max tries  │               │    │
+ │   │   └──────────────────────────────────────────────────────────┘               │    │
+ │   │                                                                             │    │
+ │   │   ┌──────────────────────────────────────────────────────────┐               │    │
+ │   │   │  IMMICH (port 2283)                           immich.nix│               │    │
+ │   │   │  Photo & Video Backup Server                            │               │    │
+ │   │   │  Machine Learning: DISABLED                             │               │    │
+ │   │   │                                                         │               │    │
+ │   │   │   ┌──────────────┐  ┌────────────┐  ┌───────────────┐  │               │    │
+ │   │   │   │  immich-api  │  │ PostgreSQL │  │ Redis         │  │               │    │
+ │   │   │   │  (Node.js)   │  │ (metadata) │  │ (job queue)   │  │               │    │
+ │   │   │   └──────┬───────┘  └─────┬──────┘  └───────┬───────┘  │               │    │
+ │   │   │          └────────────────┼──────────────────┘          │               │    │
+ │   │   │                           │                             │               │    │
+ │   │   │                    ┌──────┴──────┐                      │               │    │
+ │   │   │                    │ /var/lib/   │                      │               │    │
+ │   │   │                    │   immich/   │                      │               │    │
+ │   │   │                    │ (photos,    │                      │               │    │
+ │   │   │                    │  videos,    │                      │               │    │
+ │   │   │                    │  thumbs)    │                      │               │    │
+ │   │   │                    └─────────────┘                      │               │    │
+ │   │   └──────────────────────────────────────────────────────────┘               │    │
+ │   │                                                                             │    │
+ │   │   ┌──────────────────────────────────────────────────────────┐               │    │
+ │   │   │  TAILSCALE (UDP 41641)                      tailscale.nix│              │    │
+ │   │   │  WireGuard mesh VPN                                     │               │    │
+ │   │   │  tailscale0 interface ── trusted (no firewall)          │               │    │
+ │   │   └──────────────────────────────────────────────────────────┘               │    │
+ │   │                                                                             │    │
+ │   └─────────────────────────────────────────────────────────────────────────────┘    │
+ │                                                                                     │
+ └─────────────────────────────────────────────────────────────────────────────────────┘
+
+
+ ACCESS MATRIX
+ ─────────────
+
+ ┌─────────────────┬──────────────┬──────────────────────┬────────────────────────────┐
+ │ Service         │ LAN Access   │ Tailscale Access     │ Public Internet            │
+ ├─────────────────┼──────────────┼──────────────────────┼────────────────────────────┤
+ │ SSH (root)      │ :22 key-only │ :22 key-only         │ BLOCKED                    │
+ │ SSH (server)    │ :22 key-only │ :22 key-only         │ BLOCKED                    │
+ │ Immich          │ :2283        │ :2283                │ BLOCKED                    │
+ │ PostgreSQL      │ BLOCKED      │ internal only        │ BLOCKED                    │
+ │ Redis           │ BLOCKED      │ internal only        │ BLOCKED                    │
+ └─────────────────┴──────────────┴──────────────────────┴────────────────────────────┘
+
+ No services are exposed to the public internet.
+ Remote access is exclusively through Tailscale's encrypted WireGuard tunnels.
+```
+
+---
+
 ## Hardware Specifications
 
 | Component | Specification |
