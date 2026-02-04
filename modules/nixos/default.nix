@@ -6,6 +6,7 @@
     ./laptop.nix
     ./networking.nix
     ./ssh.nix
+    ./tailscale.nix
     ./users.nix
   ];
 
