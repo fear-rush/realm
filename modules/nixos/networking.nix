@@ -1,11 +1,11 @@
-{ config, pkgs, ... }:
+{ config, pkgs, lib, ... }:
 
 {
   networking = {
     networkmanager.enable = true;
 
     # Disable wpa_supplicant (conflicts with NetworkManager)
-    wireless.enable = false;
+    wireless.enable = lib.mkForce false;
 
     # Static IP
     interfaces.wlp2s0.ipv4.addresses = [{
