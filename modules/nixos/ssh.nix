@@ -33,12 +33,6 @@
       LoginGraceTime = 60;
     };
 
-    # Allow password auth only for server user
-    extraConfig = ''
-      Match User server
-        PasswordAuthentication yes
-    '';
-
     ports = [ 22 ];
     openFirewall = true;
   };
