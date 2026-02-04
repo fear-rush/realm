@@ -247,9 +247,11 @@ sudo nix-store --optimise
 │   │
 │   ├── nixos/                             # NixOS-only server modules
 │   │   ├── default.nix                    # Imports all nixos modules + GC
-│   │   ├── laptop.nix                     # Hardware: lid, power, thermal, sysctl
+│   │   ├── immich.nix                     # Immich photo/video backup server
+│   │   ├── laptop.nix                     # Hardware: lid, power, thermal, sysctl, screen blank
 │   │   ├── networking.nix                 # NetworkManager, firewall
 │   │   ├── ssh.nix                        # OpenSSH hardening
+│   │   ├── tailscale.nix                  # Tailscale VPN mesh network
 │   │   └── users.nix                      # Users, SSH keys, sudo
 │   │
 │   ├── home/                              # User environment (home-manager)
@@ -301,8 +303,8 @@ sudo nix-store --optimise
 | Shell | bash |
 | Nix Channel | nixpkgs-unstable (shared) |
 | Modules | nixos only |
-| Extra Integrations | None (standalone) |
-| Purpose | Headless server |
+| Extra Integrations | Immich, Tailscale |
+| Purpose | Headless server (photo backup, VPN node) |
 
 ### Shared Between Both Hosts
 
@@ -331,10 +333,13 @@ sudo nix-store --optimise
 
 ### shisui Only
 
+- Immich photo/video backup server (port 2283, ML disabled)
+- Tailscale VPN mesh network (access services from anywhere)
 - OpenSSH server with hardened config
-- Firewall (ports 22, 80, 443)
+- Firewall (ports 22, 80, 443, 2283 + Tailscale UDP)
 - NetworkManager with WiFi power save disabled
 - Laptop-as-server optimizations (lid ignore, no sleep, no GUI, no Bluetooth, no sound)
+- Console screen blanking (setterm + consoleblank kernel param)
 - Thermal management (thermald)
 - Kernel sysctl tuning (network buffers, VM dirty pages, swappiness)
 - GRUB bootloader (BIOS/MBR)
@@ -345,25 +350,363 @@ sudo nix-store --optimise
 
 ## Server Services
 
-| Service | Status | Port |
-|---------|--------|------|
-| SSH | Running | 22 |
-| NetworkManager | Running | - |
-| thermald | Running | - |
-| systemd-timesyncd | Running | - |
-| systemd-oomd | Running | - |
+| Service | Status | Port | Config |
+|---------|--------|------|--------|
+| Immich | Running | 2283 | `modules/nixos/immich.nix` |
+| Tailscale | Running | 41641/UDP | `modules/nixos/tailscale.nix` |
+| SSH | Running | 22 | `modules/nixos/ssh.nix` |
+| NetworkManager | Running | - | `modules/nixos/networking.nix` |
+| thermald | Running | - | `modules/nixos/laptop.nix` |
+| console-blank | Oneshot | - | `modules/nixos/laptop.nix` |
+| systemd-timesyncd | Running | - | Built-in |
+| systemd-oomd | Running | - | Built-in |
 
 ---
 
 ## Firewall Rules
 
-| Port | Protocol | Service |
-|------|----------|---------|
-| 22 | TCP | SSH |
-| 80 | TCP | HTTP (reserved for future use) |
-| 443 | TCP | HTTPS (reserved for future use) |
+| Port | Protocol | Service | Source |
+|------|----------|---------|--------|
+| 22 | TCP | SSH | `networking.nix` |
+| 80 | TCP | HTTP (reserved) | `networking.nix` |
+| 443 | TCP | HTTPS (reserved) | `networking.nix` |
+| 2283 | TCP | Immich | `immich.nix` (openFirewall) |
+| 41641 | UDP | Tailscale | `tailscale.nix` |
 
-All other incoming connections are dropped and logged.
+The `tailscale0` interface is trusted — all ports are accessible to Tailscale nodes without additional firewall rules. All other incoming connections on physical interfaces are dropped and logged.
+
+---
+
+## Immich (Photo & Video Backup)
+
+Immich is a self-hosted photo and video backup solution, configured as a storage-only server with machine learning disabled to conserve resources on the i3-2310M.
+
+### Architecture
+
+```
+                                 shisui (192.168.100.10)
+                                 ┌─────────────────────────────────┐
+                                 │                                 │
+Phone/Desktop App ──────────────>│  immich-server (systemd)        │
+  (upload photos)    port 2283   │  ├── immich-api (Node.js)       │
+                                 │  ├── PostgreSQL (database)      │
+                                 │  └── Redis (cache/queue)        │
+                                 │                                 │
+                                 │  Storage:                       │
+                                 │  └── /var/lib/immich/ (media)   │
+                                 │                                 │
+                                 └─────────────────────────────────┘
+```
+
+Immich runs as a systemd service (`immich-server.service`) which spawns the API server. PostgreSQL stores metadata (albums, users, timestamps, GPS data) and Redis handles job queues. All uploaded photos and videos are stored on disk at `/var/lib/immich/`.
+
+Machine learning is disabled (`machine-learning.enable = false`), so features like facial recognition, smart search, duplicate detection, and OCR are unavailable. This significantly reduces RAM and CPU usage on the 8GB system.
+
+### Configuration
+
+Defined in `modules/nixos/immich.nix`:
+
+```nix
+services.immich = {
+  enable = true;
+  host = "0.0.0.0";         # Listen on all interfaces (not just localhost)
+  port = 2283;
+  openFirewall = true;       # Auto-open port 2283 in firewall
+  machine-learning.enable = false;  # Disable ML for resource savings
+};
+```
+
+Key options reference: https://mynixos.com/nixpkgs/options/services.immich
+
+### Access
+
+| Method | URL |
+|--------|-----|
+| LAN | `http://192.168.100.10:2283` |
+| Tailscale | `http://<shisui-tailscale-ip>:2283` |
+
+On first access, Immich presents a setup wizard to create the admin account. After setup, install the Immich mobile app (iOS/Android) and point it at the server URL to enable automatic photo backup.
+
+### Systemd Units
+
+Immich creates several systemd units:
+
+| Unit | Purpose |
+|------|---------|
+| `immich-server.service` | Main Immich API server |
+| `postgresql.service` | Database (auto-managed by Immich module) |
+| `redis-immich.service` | Cache and job queue |
+
+### Managing Immich
+
+```bash
+# Check if Immich is running
+systemctl status immich-server
+
+# Restart Immich (e.g., after config changes that weren't picked up)
+sudo systemctl restart immich-server
+
+# Stop Immich
+sudo systemctl stop immich-server
+
+# Start Immich
+sudo systemctl start immich-server
+
+# Check all Immich-related services
+systemctl list-units 'immich*' 'redis-immich*' 'postgresql*'
+```
+
+### Viewing Logs
+
+```bash
+# Recent logs
+sudo journalctl -u immich-server -n 100
+
+# Follow logs in real-time (like docker logs -f)
+sudo journalctl -u immich-server -f
+
+# Logs since last boot
+sudo journalctl -u immich-server -b
+
+# Only errors
+sudo journalctl -u immich-server -p err
+
+# Database logs
+sudo journalctl -u postgresql
+
+# Redis logs
+sudo journalctl -u redis-immich
+```
+
+### Debugging Immich
+
+```bash
+# 1. Check service status and recent output
+systemctl status immich-server
+
+# 2. Check if Immich is listening on the correct interface
+sudo ss -tlnp | grep 2283
+# Expected: 0.0.0.0:2283 (all interfaces)
+# Problem:  [::1]:2283 (localhost only — restart needed)
+
+# 3. Check for failed related services
+systemctl list-units --failed | grep -E 'immich|postgres|redis'
+
+# 4. View the generated systemd unit file
+systemctl cat immich-server
+
+# 5. Check disk space (photos fill up fast)
+df -h /var/lib/immich
+du -sh /var/lib/immich
+
+# 6. Check memory usage (Immich + PostgreSQL can be heavy)
+systemctl status immich-server | grep Memory
+systemctl status postgresql | grep Memory
+```
+
+### Common Issues
+
+**Immich not reachable from network:**
+If `ss -tlnp | grep 2283` shows `[::1]:2283` instead of `0.0.0.0:2283`, the service is only listening on localhost. Restart it:
+
+```bash
+sudo systemctl restart immich-server
+```
+
+**Immich not restarting after rebuild:**
+`nixos-rebuild switch` doesn't always restart services if the unit file didn't change. Force restart:
+
+```bash
+sudo systemctl restart immich-server
+```
+
+**Upload failures / slow uploads:**
+Check available disk space and Immich logs:
+
+```bash
+df -h /var/lib/immich
+sudo journalctl -u immich-server -p err --since "1 hour ago"
+```
+
+**Database issues:**
+PostgreSQL is auto-managed. If it fails, check its logs:
+
+```bash
+sudo journalctl -u postgresql -n 50
+sudo systemctl restart postgresql
+sudo systemctl restart immich-server
+```
+
+### Backup Strategy
+
+Immich data lives in two places:
+
+| Data | Location | What It Contains |
+|------|----------|------------------|
+| Media files | `/var/lib/immich/` | Original photos, videos, thumbnails |
+| Database | Managed by PostgreSQL | Users, albums, metadata, GPS, timestamps |
+
+To back up media files:
+
+```bash
+# Check total size
+du -sh /var/lib/immich
+
+# Rsync to external drive or remote
+rsync -avz /var/lib/immich/ /path/to/backup/immich/
+```
+
+To back up the database:
+
+```bash
+sudo -u postgres pg_dumpall > /path/to/backup/immich-db.sql
+```
+
+---
+
+## Tailscale (VPN Mesh Network)
+
+Tailscale creates a WireGuard-based mesh VPN that allows all enrolled devices to reach each other securely, regardless of network location. This means Immich (and all other services) are accessible from anywhere without exposing ports to the public internet.
+
+### Architecture
+
+```
+┌──────────────┐     ┌──────────────┐     ┌──────────────┐
+│  Mac (manson) │     │  Phone       │     │  Other device │
+│  Tailscale    │     │  Tailscale   │     │  Tailscale    │
+└──────┬───────┘     └──────┬───────┘     └──────┬───────┘
+       │                    │                    │
+       │    WireGuard encrypted tunnels          │
+       │    (peer-to-peer when possible)         │
+       │                    │                    │
+       └────────────────────┼────────────────────┘
+                            │
+                     ┌──────┴───────┐
+                     │  shisui      │
+                     │  Tailscale   │
+                     │  ┌─────────┐ │
+                     │  │ Immich  │ │
+                     │  │ SSH     │ │
+                     │  │ etc.    │ │
+                     │  └─────────┘ │
+                     └──────────────┘
+```
+
+### Configuration
+
+Defined in `modules/nixos/tailscale.nix`:
+
+```nix
+environment.systemPackages = [ pkgs.tailscale ];
+services.tailscale.enable = true;
+
+networking.firewall = {
+  trustedInterfaces = [ "tailscale0" ];       # All services accessible via Tailscale
+  allowedUDPPorts = [ config.services.tailscale.port ];  # 41641 for direct connections
+};
+```
+
+The `trustedInterfaces = [ "tailscale0" ]` setting means the firewall is fully open for traffic arriving through Tailscale. Any service running on shisui is automatically accessible to Tailscale nodes without needing per-port firewall rules.
+
+### Initial Setup
+
+After the first rebuild with Tailscale enabled:
+
+```bash
+# Authenticate the machine (prints a URL to open in browser)
+sudo tailscale up
+
+# Verify connection
+tailscale status
+
+# Show this machine's Tailscale IP
+tailscale ip
+```
+
+Log into https://login.tailscale.com to manage devices, see IPs, and configure ACLs.
+
+### Accessing Services via Tailscale
+
+Once shisui is authenticated, use its Tailscale IP from any enrolled device:
+
+```bash
+# SSH via Tailscale (works from anywhere, not just LAN)
+ssh server@<shisui-tailscale-ip>
+
+# Immich via Tailscale
+# Open in browser: http://<shisui-tailscale-ip>:2283
+```
+
+You can also use the Tailscale machine name (e.g., `shisui`) if MagicDNS is enabled in your Tailnet settings.
+
+### Managing Tailscale
+
+```bash
+# Check connection status
+tailscale status
+
+# Show all connected nodes
+tailscale status --peers
+
+# Show this machine's Tailscale IPs
+tailscale ip
+
+# Disconnect from Tailnet (keeps config, just goes offline)
+sudo tailscale down
+
+# Reconnect
+sudo tailscale up
+
+# Check the systemd service
+systemctl status tailscaled
+```
+
+### Debugging Tailscale
+
+```bash
+# Service status
+systemctl status tailscaled
+
+# Logs
+sudo journalctl -u tailscaled -n 50
+sudo journalctl -u tailscaled -f  # follow
+
+# Check if Tailscale interface exists
+ip addr show tailscale0
+
+# Ping another Tailscale node
+tailscale ping <other-node-name>
+
+# Check firewall is trusting tailscale0
+sudo iptables -L -n | grep tailscale
+```
+
+---
+
+## Display Power Saving
+
+The laptop screen is blanked and powered down automatically since no display is needed for a headless server.
+
+Configured in `modules/nixos/laptop.nix` using two mechanisms:
+
+1. **Kernel parameter** (`consoleblank=60`) — tells the kernel to blank the console after 60 seconds of inactivity
+2. **systemd oneshot service** (`console-blank`) — runs `setterm` at boot targeting `/dev/console` directly:
+   - `--blank 1` — blank screen after 1 minute of inactivity
+   - `--powerdown 2` — DPMS power down display after 2 minutes
+   - `--powersave on` — enable display power saving mode
+
+Both mechanisms are needed because `consoleblank` alone is unreliable on some hardware. The `setterm` service writes escape sequences directly to `/dev/console` with `TERM=linux`, which works regardless of whether anyone is logged into the console.
+
+```bash
+# Verify the console-blank service ran successfully
+systemctl status console-blank
+
+# Check current kernel consoleblank value (seconds, 0 = disabled)
+cat /sys/module/kernel/parameters/consoleblank
+
+# Manually blank the screen (e.g., after a reboot where you used the console)
+sudo setterm --blank 1 --powerdown 2 --powersave on > /dev/console
+```
 
 ---
 
@@ -672,9 +1015,58 @@ New files must be staged in git before Nix can see them:
 git add path/to/new/file.nix
 ```
 
+### Immich not loading in browser
+
+Check if the service is running and listening on the correct interface:
+
+```bash
+systemctl status immich-server
+sudo ss -tlnp | grep 2283
+```
+
+If it shows `[::1]:2283`, it's only on localhost. Restart:
+
+```bash
+sudo systemctl restart immich-server
+```
+
+If the service isn't running at all, check logs:
+
+```bash
+sudo journalctl -u immich-server -n 50
+sudo journalctl -u postgresql -n 50
+sudo journalctl -u redis-immich -n 50
+```
+
+### Tailscale not connecting
+
+```bash
+# Check the daemon
+systemctl status tailscaled
+sudo journalctl -u tailscaled -n 50
+
+# Re-authenticate if needed
+sudo tailscale up
+
+# Verify the interface exists
+ip addr show tailscale0
+```
+
+### Services not accessible via Tailscale
+
+Verify the `tailscale0` interface is trusted in the firewall:
+
+```bash
+sudo iptables -L -n | grep tailscale
+tailscale ping <target-node>
+```
+
 ### Disk space running low
 
 ```bash
 sudo nix-collect-garbage -d
 sudo nix-store --optimise
+
+# Check Immich media storage specifically
+du -sh /var/lib/immich
 ```

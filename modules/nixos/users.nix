@@ -16,6 +16,7 @@
 
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIhjnmrkuXxq0lM2pM2WYy1WcgPXY3CLqO6bhRCd+5u1 firas"
+      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBgmoF+cflWZj4a8hdMT94Xiu+/EP0nDhD2d7O5t04rR"
     ];
 
     shell = pkgs.bash;
