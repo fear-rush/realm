@@ -6,6 +6,7 @@
     brews = [
       "llama.cpp"
       "platformio"
+      "git-lfs"
     ];
     casks = [
       "android-platform-tools"

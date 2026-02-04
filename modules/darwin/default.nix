@@ -3,7 +3,6 @@
 {
   imports = [
     ./system.nix
-    ./aerospace.nix
     ./homebrew.nix
     ./nix.nix
     ./openscreen.nix

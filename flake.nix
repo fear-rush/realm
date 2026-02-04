@@ -77,8 +77,15 @@
       };
     };
 
-    # Future NixOS support:
-    # nixosConfigurations."hostname" = nixpkgs.lib.nixosSystem { ... };
+    nixosConfigurations = {
+      "shisui" = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+        specialArgs = { inherit inputs; };
+        modules = [
+          ./hosts/shisui
+        ];
+      };
+    };
 
     # Future standalone home-manager (non-NixOS Linux):
     # homeConfigurations."maryln@hostname" = home-manager.lib.homeManagerConfiguration { ... };
