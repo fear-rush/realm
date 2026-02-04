@@ -1,14 +1,11 @@
-{ config, pkgs, lib, ... }:
+{ config, pkgs, ... }:
 
 {
   networking = {
-    networkmanager.enable = true;
-
-    # Disable wpa_supplicant (conflicts with NetworkManager)
-    wireless.enable = lib.mkForce false;
-
-    # DNS
-    nameservers = [ "1.1.1.1" "8.8.8.8" ];
+    networkmanager = {
+      enable = true;
+      wifi.powersave = false;
+    };
 
     # Firewall
     firewall = {
