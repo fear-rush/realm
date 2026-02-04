@@ -38,6 +38,9 @@
   services.xserver.enable = false;
   services.displayManager.enable = false;
 
+  # Blank console screen after 60 seconds of inactivity
+  boot.kernelParams = [ "consoleblank=60" ];
+
   # Firmware updates
   hardware.enableRedistributableFirmware = true;
 
