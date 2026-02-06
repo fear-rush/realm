@@ -12,11 +12,10 @@ in
     package = pkgs.nextcloud32;
     hostName = "localhost";
 
-    # Trusted domains (Tailscale IP and local)
+    # Trusted domains (Tailscale IP and local network)
     settings.trusted_domains = [
       "100.127.173.76"
-      "shisui"
-      "shisui.cyprus-kelvin.ts.net"
+      "192.168.100.10"
     ];
 
     # Data storage
