@@ -34,6 +34,25 @@ in
     autoUpdateApps.enable = true;
   };
 
+  # Ensure admin password matches sops secret on every rebuild
+  systemd.services.nextcloud-admin-password = {
+    description = "Set Nextcloud admin password from sops";
+    after = [ "nextcloud-setup.service" ];
+    requires = [ "nextcloud-setup.service" ];
+    wantedBy = [ "multi-user.target" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+
+    script = ''
+      OC_PASS="$(cat ${config.sops.secrets.nextcloud_admin_pass.path})"
+      export OC_PASS
+      ${config.services.nextcloud.occ}/bin/nextcloud-occ user:resetpassword --password-from-env admin
+    '';
+  };
+
   # Nginx - HTTP on custom port
   services.nginx.virtualHosts."localhost" = {
     listen = [
