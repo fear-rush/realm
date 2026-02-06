@@ -18,6 +18,11 @@ in
       "192.168.100.10"
     ];
 
+    # Trusted proxies (allow Tailscale network)
+    settings.trusted_proxies = [
+      "100.64.0.0/10"
+    ];
+
     # Data storage
     home = "/var/lib/nextcloud";
     maxUploadSize = "10G";
