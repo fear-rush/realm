@@ -2,6 +2,7 @@
 
 let
   nextcloudDomain = "shisui.taild14c94.ts.net";
+  certDir = "/var/lib/tailscale-cert";
 in
 {
   # Nextcloud admin password from sops (root-owned, nextcloud-setup runs as root)
@@ -12,7 +13,7 @@ in
     package = pkgs.nextcloud32;
     hostName = nextcloudDomain;
 
-    # Use HTTPS protocol for links (Tailscale handles encryption)
+    # Use HTTPS protocol for links
     settings.overwriteprotocol = "https";
 
     # Data storage
@@ -38,24 +39,69 @@ in
     autoUpdateApps.enable = true;
   };
 
-  # Nginx HTTPS with self-signed cert (Tailscale provides encryption)
-  services.nginx.virtualHosts.${nextcloudDomain} = {
-    forceSSL = true;
-    sslCertificate = "/var/lib/nextcloud/ssl/cert.pem";
-    sslCertificateKey = "/var/lib/nextcloud/ssl/key.pem";
+  # Tailscale HTTPS certificate provisioning
+  systemd.services.tailscale-cert = {
+    description = "Fetch Tailscale HTTPS certificate";
+    after = [ "tailscaled.service" ];
+    wants = [ "tailscaled.service" ];
+    wantedBy = [ "multi-user.target" ];
+    before = [ "nginx.service" ];
+    requiredBy = [ "nginx.service" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
+    };
+
+    path = [ pkgs.tailscale ];
+
+    script = ''
+      mkdir -p ${certDir}
+      tailscale cert \
+        --cert-file=${certDir}/cert.pem \
+        --key-file=${certDir}/key.pem \
+        ${nextcloudDomain}
+      chmod 640 ${certDir}/key.pem
+      chown root:nginx ${certDir}/key.pem
+    '';
   };
 
-  # Create self-signed SSL certificate on activation
-  system.activationScripts.nextcloudSSL = ''
-    mkdir -p /var/lib/nextcloud/ssl
-    if [ ! -f /var/lib/nextcloud/ssl/cert.pem ]; then
-      ${pkgs.openssl}/bin/openssl req -x509 -nodes -days 3650 \
-        -newkey rsa:2048 \
-        -keyout /var/lib/nextcloud/ssl/key.pem \
-        -out /var/lib/nextcloud/ssl/cert.pem \
-        -subj "/CN=${nextcloudDomain}"
-      chown -R nextcloud:nextcloud /var/lib/nextcloud/ssl
-      chmod 600 /var/lib/nextcloud/ssl/key.pem
-    fi
-  '';
+  # Renew certificate daily
+  systemd.timers.tailscale-cert-renew = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "daily";
+      Persistent = true;
+    };
+  };
+
+  systemd.services.tailscale-cert-renew = {
+    description = "Renew Tailscale HTTPS certificate";
+    after = [ "tailscaled.service" ];
+    wants = [ "tailscaled.service" ];
+
+    serviceConfig = {
+      Type = "oneshot";
+    };
+
+    path = [ pkgs.tailscale ];
+
+    script = ''
+      mkdir -p ${certDir}
+      tailscale cert \
+        --cert-file=${certDir}/cert.pem \
+        --key-file=${certDir}/key.pem \
+        ${nextcloudDomain}
+      chmod 640 ${certDir}/key.pem
+      chown root:nginx ${certDir}/key.pem
+      systemctl reload nginx
+    '';
+  };
+
+  # Nginx with Tailscale cert
+  services.nginx.virtualHosts.${nextcloudDomain} = {
+    forceSSL = true;
+    sslCertificate = "${certDir}/cert.pem";
+    sslCertificateKey = "${certDir}/key.pem";
+  };
 }
