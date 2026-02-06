@@ -83,6 +83,8 @@
         specialArgs = { inherit inputs; };
         modules = [
           ./hosts/shisui
+          sops-nix.nixosModules.sops
+          ./modules/shared/sops.nix
         ];
       };
     };
