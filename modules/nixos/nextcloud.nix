@@ -4,12 +4,8 @@ let
   nextcloudDomain = "shisui.taild14c94.ts.net";
 in
 {
-  # Nextcloud admin password from sops
-  sops.secrets.nextcloud_admin_pass = {
-    owner = "nextcloud";
-    group = "nextcloud";
-    mode = "0400";
-  };
+  # Nextcloud admin password from sops (root-owned, nextcloud-setup runs as root)
+  sops.secrets.nextcloud_admin_pass = { };
 
   services.nextcloud = {
     enable = true;

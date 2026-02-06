@@ -2,22 +2,25 @@
 
 let
   isDarwin = pkgs.stdenv.isDarwin;
-  # TODO: make it not hardcoded
-  homeDir = if isDarwin then "/Users/maryln" else "/home/maryln";
+  homeDir = if isDarwin then "/Users/maryln" else "/home/server";
   ageKeyPath = "${homeDir}/.config/sops/age/keys.txt";
 in
 {
   sops.defaultSopsFile = ../../secrets/secrets.yaml;
   sops.age.keyFile = ageKeyPath;
 
-  # Disable SSH host key lookup (not needed on macOS)
-  # not needed because i already have keyfile instead of using system /etc/ssh to ecnrypt the Key
+  # Disable SSH host key lookup (using age keyfile instead)
   sops.gnupg.sshKeyPaths = [];
   sops.age.sshKeyPaths = [];
 
-  # API Key
-  sops.secrets.context7_api_key = {
-    owner = "maryln";
-    mode = "0400";
-  };
+  # Platform-specific secrets
+  sops.secrets = lib.mkMerge [
+    # Darwin (macOS) secrets
+    (lib.mkIf isDarwin {
+      context7_api_key = {
+        owner = "maryln";
+        mode = "0400";
+      };
+    })
+  ];
 }
