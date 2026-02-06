@@ -5,6 +5,7 @@
     ./immich.nix
     ./laptop.nix
     ./networking.nix
+    ./nextcloud.nix
     ./ssh.nix
     ./tailscale.nix
     ./users.nix

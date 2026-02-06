@@ -1,5 +1,6 @@
 keys:
   - &maryln age1ppms6tya82fggm97qt85xhjg2tzq9sgmxmp2r8s5gf9f0hhttajs2dlv52
+  - &shisui age1hvkkvq43uehjp3j3szmffcgv3v6zrf3hxs4rrgr0a9uxq7nfausspun0pd
 
 creation_rules:
   - path_regex: secrets/secrets\.yaml$
