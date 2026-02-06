@@ -12,17 +12,21 @@ in
     package = pkgs.nextcloud32;
     hostName = "localhost";
 
-    # Trusted domains (Tailscale IP and local network)
+    # Trusted domains (Tailscale IP, hostname, and local network)
     settings.trusted_domains = [
       "100.127.173.76"
       "192.168.100.10"
-      "nextcloud.local"
+      "shisui.cyprus-kelvin.ts.net"
     ];
 
     # Trusted proxies (allow Tailscale network)
     settings.trusted_proxies = [
       "100.64.0.0/10"
+      "127.0.0.1"
     ];
+
+    # Overwrite settings for Tailscale Serve reverse proxy
+    settings.overwriteprotocol = "https";
 
     # Data storage
     home = "/var/lib/nextcloud";
@@ -38,6 +42,9 @@ in
     database.createLocally = true;
     configureRedis = true;
     autoUpdateApps.enable = true;
+
+    # Use unique session name to avoid cookie conflicts with other services on same IP
+    phpOptions."session.name" = "NEXTCLOUD_SESSID";
   };
 
   # Ensure admin password matches sops secret on every rebuild

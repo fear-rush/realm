@@ -2,7 +2,6 @@
 
 {
   imports = [
-    ./immich.nix
     ./laptop.nix
     ./networking.nix
     ./nextcloud.nix
