@@ -9,7 +9,7 @@ in
 
   services.nextcloud = {
     enable = true;
-    package = pkgs.nextcloud31;
+    package = pkgs.nextcloud32;
     hostName = nextcloudDomain;
 
     # Use HTTPS protocol for links (Tailscale handles encryption)
