@@ -2,6 +2,7 @@
 
 {
   imports = [
+    ./caddy.nix
     ./laptop.nix
     ./networking.nix
     ./nextcloud.nix

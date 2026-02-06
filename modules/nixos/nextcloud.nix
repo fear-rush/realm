@@ -16,7 +16,7 @@ in
     settings.trusted_domains = [
       "100.127.173.76"
       "192.168.100.10"
-      "shisui.cyprus-kelvin.ts.net"
+      "cloud.cyprus-kelvin.ts.net"
     ];
 
     # Trusted proxies (allow Tailscale network)
@@ -42,9 +42,6 @@ in
     database.createLocally = true;
     configureRedis = true;
     autoUpdateApps.enable = true;
-
-    # Use unique session name to avoid cookie conflicts with other services on same IP
-    phpOptions."session.name" = "NEXTCLOUD_SESSID";
   };
 
   # Ensure admin password matches sops secret on every rebuild
@@ -66,13 +63,10 @@ in
     '';
   };
 
-  # Nginx - HTTP on custom port
+  # Nginx - bind to localhost only (Caddy reverse proxies to this)
   services.nginx.virtualHosts."localhost" = {
     listen = [
-      { addr = "0.0.0.0"; port = nextcloudPort; }
+      { addr = "127.0.0.1"; port = nextcloudPort; }
     ];
   };
-
-  # Open firewall for Nextcloud port
-  networking.firewall.allowedTCPPorts = [ nextcloudPort ];
 }
