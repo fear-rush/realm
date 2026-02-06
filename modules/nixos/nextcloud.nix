@@ -16,6 +16,7 @@ in
     settings.trusted_domains = [
       "100.127.173.76"
       "192.168.100.10"
+      "nextcloud.local"
     ];
 
     # Trusted proxies (allow Tailscale network)
