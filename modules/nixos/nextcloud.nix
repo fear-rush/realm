@@ -63,10 +63,14 @@ in
     '';
   };
 
-  # Nginx - bind to localhost only (Caddy reverse proxies to this)
+  # Nginx - bind to localhost (for Caddy) and LAN (for direct access)
   services.nginx.virtualHosts."localhost" = {
     listen = [
       { addr = "127.0.0.1"; port = nextcloudPort; }
+      { addr = "192.168.100.10"; port = nextcloudPort; }
     ];
   };
+
+  # Open firewall for LAN access
+  networking.firewall.allowedTCPPorts = [ nextcloudPort ];
 }
