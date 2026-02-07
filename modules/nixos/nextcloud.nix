@@ -25,8 +25,8 @@ in
       "127.0.0.1"
     ];
 
-    # Overwrite settings for Tailscale Serve reverse proxy
-    settings.overwriteprotocol = "https";
+    # Let Nextcloud detect protocol from X-Forwarded-Proto header
+    # (Caddy sets this for HTTPS, direct HTTP access works without it)
 
     # Data storage
     home = "/var/lib/nextcloud";

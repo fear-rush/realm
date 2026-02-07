@@ -31,7 +31,9 @@
       "https://cloud.cyprus-kelvin.ts.net" = {
         extraConfig = ''
           bind tailscale/cloud
-          reverse_proxy localhost:8080
+          reverse_proxy localhost:8080 {
+            header_up X-Forwarded-Proto https
+          }
         '';
       };
 
