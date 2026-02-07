@@ -14,7 +14,7 @@ NixOS headless server running on a repurposed laptop (Intel i3-2310M, 8GB DDR3, 
  │  Phone / Laptop     │                               │  Mac (manson)       │
  │                     │                               │  192.168.100.x      │
  │  Tailscale app      │                               │                     │
- │  Immich app         │                               │  Tailscale app      │
+ │  Nextcloud app      │                               │  Tailscale app      │
  └────────┬────────────┘                               └────────┬────────────┘
           │                                                     │
           │  WireGuard tunnel                                   │  LAN + WireGuard tunnel
@@ -38,13 +38,12 @@ NixOS headless server running on a repurposed laptop (Intel i3-2310M, 8GB DDR3, 
  │   │  NETWORK INTERFACES                                                        │    │
  │   │                                                                             │    │
  │   │   wlp2s0 (WiFi)              tailscale0 (VPN)                               │    │
- │   │   192.168.100.10              100.x.x.x                                     │    │
+ │   │   192.168.100.10              100.127.173.76                                │    │
  │   │   ┌─────────────────┐         ┌──────────────────────┐                      │    │
  │   │   │ Firewall: STRICT│         │ Firewall: TRUSTED    │                      │    │
  │   │   │ TCP 22   (SSH)  │         │ All ports open to    │                      │    │
  │   │   │ TCP 80   (HTTP) │         │ Tailscale nodes      │                      │    │
  │   │   │ TCP 443  (HTTPS)│         │                      │                      │    │
- │   │   │ TCP 2283 (Immich│         │                      │                      │    │
  │   │   │ UDP 41641 (TS)  │         │                      │                      │    │
  │   │   └────────┬────────┘         └──────────┬───────────┘                      │    │
  │   │            └──────────────┬──────────────┘                                  │    │
@@ -67,22 +66,31 @@ NixOS headless server running on a repurposed laptop (Intel i3-2310M, 8GB DDR3, 
  │   │   └──────────────────────────────────────────────────────────┘               │    │
  │   │                                                                             │    │
  │   │   ┌──────────────────────────────────────────────────────────┐               │    │
- │   │   │  IMMICH (port 2283)                           immich.nix│               │    │
- │   │   │  Photo & Video Backup Server                            │               │    │
- │   │   │  Machine Learning: DISABLED                             │               │    │
+ │   │   │  CADDY (reverse proxy)                         caddy.nix│               │    │
+ │   │   │  With Tailscale plugin for virtual hosts                │               │    │
+ │   │   │                                                         │               │    │
+ │   │   │   cloud.cyprus-kelvin.ts.net ──► localhost:8080         │               │    │
+ │   │   │   (tsnet node: 100.89.212.26)     (Nextcloud/nginx)     │               │    │
+ │   │   │                                                         │               │    │
+ │   │   │   Each virtual host = separate Tailscale node           │               │    │
+ │   │   │   Auto TLS certificates from Let's Encrypt              │               │    │
+ │   │   └──────────────────────────────────────────────────────────┘               │    │
+ │   │                                                                             │    │
+ │   │   ┌──────────────────────────────────────────────────────────┐               │    │
+ │   │   │  NEXTCLOUD (port 8080)                      nextcloud.nix│               │    │
+ │   │   │  Self-hosted Cloud Storage                              │               │    │
  │   │   │                                                         │               │    │
  │   │   │   ┌──────────────┐  ┌────────────┐  ┌───────────────┐  │               │    │
- │   │   │   │  immich-api  │  │ PostgreSQL │  │ Redis         │  │               │    │
- │   │   │   │  (Node.js)   │  │ (metadata) │  │ (job queue)   │  │               │    │
+ │   │   │   │  nginx       │  │ PostgreSQL │  │ Redis         │  │               │    │
+ │   │   │   │  (localhost) │  │ (database) │  │ (cache)       │  │               │    │
  │   │   │   └──────┬───────┘  └─────┬──────┘  └───────┬───────┘  │               │    │
  │   │   │          └────────────────┼──────────────────┘          │               │    │
  │   │   │                           │                             │               │    │
  │   │   │                    ┌──────┴──────┐                      │               │    │
  │   │   │                    │ /var/lib/   │                      │               │    │
- │   │   │                    │   immich/   │                      │               │    │
- │   │   │                    │ (photos,    │                      │               │    │
- │   │   │                    │  videos,    │                      │               │    │
- │   │   │                    │  thumbs)    │                      │               │    │
+ │   │   │                    │  nextcloud/ │                      │               │    │
+ │   │   │                    │ (files,     │                      │               │    │
+ │   │   │                    │  data)      │                      │               │    │
  │   │   │                    └─────────────┘                      │               │    │
  │   │   └──────────────────────────────────────────────────────────┘               │    │
  │   │                                                                             │    │
@@ -90,6 +98,7 @@ NixOS headless server running on a repurposed laptop (Intel i3-2310M, 8GB DDR3, 
  │   │   │  TAILSCALE (UDP 41641)                      tailscale.nix│              │    │
  │   │   │  WireGuard mesh VPN                                     │               │    │
  │   │   │  tailscale0 interface ── trusted (no firewall)          │               │    │
+ │   │   │  permitCertUid = "caddy" (for TLS cert fetching)        │               │    │
  │   │   └──────────────────────────────────────────────────────────┘               │    │
  │   │                                                                             │    │
  │   └─────────────────────────────────────────────────────────────────────────────┘    │
@@ -100,18 +109,19 @@ NixOS headless server running on a repurposed laptop (Intel i3-2310M, 8GB DDR3, 
  ACCESS MATRIX
  ─────────────
 
- ┌─────────────────┬──────────────┬──────────────────────┬────────────────────────────┐
- │ Service         │ LAN Access   │ Tailscale Access     │ Public Internet            │
- ├─────────────────┼──────────────┼──────────────────────┼────────────────────────────┤
- │ SSH (root)      │ :22 key-only │ :22 key-only         │ BLOCKED                    │
- │ SSH (server)    │ :22 key-only │ :22 key-only         │ BLOCKED                    │
- │ Immich          │ :2283        │ :2283                │ BLOCKED                    │
- │ PostgreSQL      │ BLOCKED      │ internal only        │ BLOCKED                    │
- │ Redis           │ BLOCKED      │ internal only        │ BLOCKED                    │
- └─────────────────┴──────────────┴──────────────────────┴────────────────────────────┘
+ ┌─────────────────┬──────────────┬───────────────────────────────────┬─────────────────┐
+ │ Service         │ LAN Access   │ Tailscale Access                  │ Public Internet │
+ ├─────────────────┼──────────────┼───────────────────────────────────┼─────────────────┤
+ │ SSH (root)      │ :22 key-only │ :22 key-only                      │ BLOCKED         │
+ │ SSH (server)    │ :22 key-only │ :22 key-only                      │ BLOCKED         │
+ │ Nextcloud       │ BLOCKED      │ https://cloud.cyprus-kelvin.ts.net│ BLOCKED         │
+ │ PostgreSQL      │ BLOCKED      │ internal only                     │ BLOCKED         │
+ │ Redis           │ BLOCKED      │ internal only                     │ BLOCKED         │
+ └─────────────────┴──────────────┴───────────────────────────────────┴─────────────────┘
 
  No services are exposed to the public internet.
  Remote access is exclusively through Tailscale's encrypted WireGuard tunnels.
+ Nextcloud is accessed via Caddy reverse proxy with automatic HTTPS.
 ```
 
 ---
@@ -359,8 +369,9 @@ sudo nix-store --optimise
 │   │
 │   ├── nixos/                             # NixOS-only server modules
 │   │   ├── default.nix                    # Imports all nixos modules + GC
-│   │   ├── immich.nix                     # Immich photo/video backup server
-│   │   ├── laptop.nix                     # Hardware: lid, power, thermal, sysctl, screen blank
+│   │   ├── caddy.nix                      # Caddy reverse proxy with Tailscale plugin
+│   │   ├── nextcloud.nix                  # Nextcloud cloud storage
+│   │   ├── laptop.nix                     # Hardware: lid, power, thermal, sysctl
 │   │   ├── networking.nix                 # NetworkManager, firewall
 │   │   ├── ssh.nix                        # OpenSSH hardening
 │   │   ├── tailscale.nix                  # Tailscale VPN mesh network
@@ -377,7 +388,7 @@ sudo nix-store --optimise
 │   │   └── fastfetch.nix                  # System info display
 │   │
 │   └── shared/
-│       └── sops.nix                       # Secret management (manson only, currently)
+│       └── sops.nix                       # Secret management
 │
 ├── templates/                             # Dev environment templates
 │   ├── node/                              # nix flake init -t ~/.config/nix#node
@@ -415,8 +426,8 @@ sudo nix-store --optimise
 | Shell | bash |
 | Nix Channel | nixpkgs-unstable (shared) |
 | Modules | nixos only |
-| Extra Integrations | Immich, Tailscale |
-| Purpose | Headless server (photo backup, VPN node) |
+| Extra Integrations | Nextcloud, Caddy, Tailscale |
+| Purpose | Headless server (cloud storage, VPN node) |
 
 ### Shared Between Both Hosts
 
@@ -445,10 +456,11 @@ sudo nix-store --optimise
 
 ### shisui Only
 
-- Immich photo/video backup server (port 2283, ML disabled)
+- Nextcloud cloud storage (via Caddy reverse proxy)
+- Caddy with Tailscale plugin (virtual hosts, auto HTTPS)
 - Tailscale VPN mesh network (access services from anywhere)
 - OpenSSH server with hardened config
-- Firewall (ports 22, 80, 443, 2283 + Tailscale UDP)
+- Firewall (ports 22, 80, 443 + Tailscale UDP)
 - NetworkManager with WiFi power save disabled
 - Laptop-as-server optimizations (lid ignore, no sleep, no GUI, no Bluetooth, no sound)
 - Console screen blanking (setterm + consoleblank kernel param)
@@ -462,9 +474,10 @@ sudo nix-store --optimise
 
 ## Server Services
 
-| Service | Status | Port | Config |
-|---------|--------|------|--------|
-| Immich | Running | 2283 | `modules/nixos/immich.nix` |
+| Service | Status | Port/URL | Config |
+|---------|--------|----------|--------|
+| Nextcloud | Running | https://cloud.cyprus-kelvin.ts.net | `modules/nixos/nextcloud.nix` |
+| Caddy | Running | 443 (via tsnet) | `modules/nixos/caddy.nix` |
 | Tailscale | Running | 41641/UDP | `modules/nixos/tailscale.nix` |
 | SSH | Running | 22 | `modules/nixos/ssh.nix` |
 | NetworkManager | Running | - | `modules/nixos/networking.nix` |
@@ -482,203 +495,255 @@ sudo nix-store --optimise
 | 22 | TCP | SSH | `networking.nix` |
 | 80 | TCP | HTTP (reserved) | `networking.nix` |
 | 443 | TCP | HTTPS (reserved) | `networking.nix` |
-| 2283 | TCP | Immich | `immich.nix` (openFirewall) |
 | 41641 | UDP | Tailscale | `tailscale.nix` |
 
 The `tailscale0` interface is trusted — all ports are accessible to Tailscale nodes without additional firewall rules. All other incoming connections on physical interfaces are dropped and logged.
 
 ---
 
-## Immich (Photo & Video Backup)
+## Nextcloud (Cloud Storage)
 
-Immich is a self-hosted photo and video backup solution, configured as a storage-only server with machine learning disabled to conserve resources on the i3-2310M.
+Nextcloud is a self-hosted cloud storage solution, accessible via HTTPS through the Caddy reverse proxy with Tailscale.
 
 ### Architecture
 
 ```
                                  shisui (192.168.100.10)
-                                 ┌─────────────────────────────────┐
-                                 │                                 │
-Phone/Desktop App ──────────────>│  immich-server (systemd)        │
-  (upload photos)    port 2283   │  ├── immich-api (Node.js)       │
-                                 │  ├── PostgreSQL (database)      │
-                                 │  └── Redis (cache/queue)        │
-                                 │                                 │
-                                 │  Storage:                       │
-                                 │  └── /var/lib/immich/ (media)   │
-                                 │                                 │
-                                 └─────────────────────────────────┘
+                                 ┌─────────────────────────────────────────────┐
+                                 │                                             │
+Browser ─────────────────────────│  Caddy (with Tailscale plugin)              │
+  https://cloud.cyprus-kelvin    │  ├── tsnet node "cloud" (100.89.212.26)     │
+  .ts.net                        │  └── reverse_proxy → localhost:8080        │
+                                 │                                             │
+                                 │  nginx (localhost:8080)                     │
+                                 │  ├── PHP-FPM (Nextcloud app)                │
+                                 │  ├── PostgreSQL (database)                  │
+                                 │  └── Redis (cache/sessions)                 │
+                                 │                                             │
+                                 │  Storage:                                   │
+                                 │  └── /var/lib/nextcloud/ (files, data)      │
+                                 │                                             │
+                                 └─────────────────────────────────────────────┘
 ```
-
-Immich runs as a systemd service (`immich-server.service`) which spawns the API server. PostgreSQL stores metadata (albums, users, timestamps, GPS data) and Redis handles job queues. All uploaded photos and videos are stored on disk at `/var/lib/immich/`.
-
-Machine learning is disabled (`machine-learning.enable = false`), so features like facial recognition, smart search, duplicate detection, and OCR are unavailable. This significantly reduces RAM and CPU usage on the 8GB system.
 
 ### Configuration
 
-Defined in `modules/nixos/immich.nix`:
+Defined in `modules/nixos/nextcloud.nix`:
 
 ```nix
-services.immich = {
+services.nextcloud = {
   enable = true;
-  host = "0.0.0.0";         # Listen on all interfaces (not just localhost)
-  port = 2283;
-  openFirewall = true;       # Auto-open port 2283 in firewall
-  machine-learning.enable = false;  # Disable ML for resource savings
+  package = pkgs.nextcloud32;
+  hostName = "localhost";
+
+  settings.trusted_domains = [
+    "100.127.173.76"
+    "192.168.100.10"
+    "cloud.cyprus-kelvin.ts.net"
+  ];
+
+  settings.trusted_proxies = [ "100.64.0.0/10" "127.0.0.1" ];
+  settings.overwriteprotocol = "https";
+
+  home = "/var/lib/nextcloud";
+  maxUploadSize = "10G";
+
+  config = {
+    adminuser = "admin";
+    adminpassFile = config.sops.secrets.nextcloud_admin_pass.path;
+    dbtype = "pgsql";
+  };
+
+  database.createLocally = true;
+  configureRedis = true;
+  autoUpdateApps.enable = true;
 };
 ```
-
-Key options reference: https://mynixos.com/nixpkgs/options/services.immich
 
 ### Access
 
 | Method | URL |
 |--------|-----|
-| LAN | `http://192.168.100.10:2283` |
-| Tailscale | `http://<shisui-tailscale-ip>:2283` |
+| Tailscale | `https://cloud.cyprus-kelvin.ts.net` |
 
-On first access, Immich presents a setup wizard to create the admin account. After setup, install the Immich mobile app (iOS/Android) and point it at the server URL to enable automatic photo backup.
+**Important**: Nextcloud is only accessible via Tailscale. The MagicDNS hostname resolves through Tailscale's DNS (100.100.100.100). If using Chrome's "Secure DNS" with Cloudflare, you must set it to "With your current service provider" for `.ts.net` domains to resolve.
 
-### Systemd Units
-
-Immich creates several systemd units:
-
-| Unit | Purpose |
-|------|---------|
-| `immich-server.service` | Main Immich API server |
-| `postgresql.service` | Database (auto-managed by Immich module) |
-| `redis-immich.service` | Cache and job queue |
-
-### Managing Immich
+### Managing Nextcloud
 
 ```bash
-# Check if Immich is running
-systemctl status immich-server
+# Check if Nextcloud services are running
+systemctl status phpfpm-nextcloud nginx
 
-# Restart Immich (e.g., after config changes that weren't picked up)
-sudo systemctl restart immich-server
+# Restart Nextcloud
+sudo systemctl restart phpfpm-nextcloud
 
-# Stop Immich
-sudo systemctl stop immich-server
+# Run occ commands
+sudo -u nextcloud nextcloud-occ <command>
 
-# Start Immich
-sudo systemctl start immich-server
+# Add a new user
+sudo -u nextcloud nextcloud-occ user:add --display-name="John Doe" username
 
-# Check all Immich-related services
-systemctl list-units 'immich*' 'redis-immich*' 'postgresql*'
+# List users
+sudo -u nextcloud nextcloud-occ user:list
+
+# Check Nextcloud status
+sudo -u nextcloud nextcloud-occ status
 ```
 
 ### Viewing Logs
 
 ```bash
-# Recent logs
-sudo journalctl -u immich-server -n 100
+# Nextcloud PHP logs
+sudo journalctl -u phpfpm-nextcloud -f
 
-# Follow logs in real-time (like docker logs -f)
-sudo journalctl -u immich-server -f
+# nginx logs
+sudo journalctl -u nginx -f
 
-# Logs since last boot
-sudo journalctl -u immich-server -b
-
-# Only errors
-sudo journalctl -u immich-server -p err
-
-# Database logs
-sudo journalctl -u postgresql
+# PostgreSQL logs
+sudo journalctl -u postgresql -f
 
 # Redis logs
-sudo journalctl -u redis-immich
-```
-
-### Debugging Immich
-
-```bash
-# 1. Check service status and recent output
-systemctl status immich-server
-
-# 2. Check if Immich is listening on the correct interface
-sudo ss -tlnp | grep 2283
-# Expected: 0.0.0.0:2283 (all interfaces)
-# Problem:  [::1]:2283 (localhost only — restart needed)
-
-# 3. Check for failed related services
-systemctl list-units --failed | grep -E 'immich|postgres|redis'
-
-# 4. View the generated systemd unit file
-systemctl cat immich-server
-
-# 5. Check disk space (photos fill up fast)
-df -h /var/lib/immich
-du -sh /var/lib/immich
-
-# 6. Check memory usage (Immich + PostgreSQL can be heavy)
-systemctl status immich-server | grep Memory
-systemctl status postgresql | grep Memory
-```
-
-### Common Issues
-
-**Immich not reachable from network:**
-If `ss -tlnp | grep 2283` shows `[::1]:2283` instead of `0.0.0.0:2283`, the service is only listening on localhost. Restart it:
-
-```bash
-sudo systemctl restart immich-server
-```
-
-**Immich not restarting after rebuild:**
-`nixos-rebuild switch` doesn't always restart services if the unit file didn't change. Force restart:
-
-```bash
-sudo systemctl restart immich-server
-```
-
-**Upload failures / slow uploads:**
-Check available disk space and Immich logs:
-
-```bash
-df -h /var/lib/immich
-sudo journalctl -u immich-server -p err --since "1 hour ago"
-```
-
-**Database issues:**
-PostgreSQL is auto-managed. If it fails, check its logs:
-
-```bash
-sudo journalctl -u postgresql -n 50
-sudo systemctl restart postgresql
-sudo systemctl restart immich-server
+sudo journalctl -u redis-nextcloud -f
 ```
 
 ### Backup Strategy
 
-Immich data lives in two places:
+Nextcloud data lives in two places:
 
 | Data | Location | What It Contains |
 |------|----------|------------------|
-| Media files | `/var/lib/immich/` | Original photos, videos, thumbnails |
-| Database | Managed by PostgreSQL | Users, albums, metadata, GPS, timestamps |
+| Files | `/var/lib/nextcloud/` | User files, app data |
+| Database | Managed by PostgreSQL | Users, shares, metadata |
 
-To back up media files:
+To back up files:
 
 ```bash
 # Check total size
-du -sh /var/lib/immich
+du -sh /var/lib/nextcloud
 
 # Rsync to external drive or remote
-rsync -avz /var/lib/immich/ /path/to/backup/immich/
+rsync -avz /var/lib/nextcloud/ /path/to/backup/nextcloud/
 ```
 
 To back up the database:
 
 ```bash
-sudo -u postgres pg_dumpall > /path/to/backup/immich-db.sql
+sudo -u postgres pg_dumpall > /path/to/backup/nextcloud-db.sql
 ```
+
+---
+
+## Caddy (Reverse Proxy with Tailscale)
+
+Caddy serves as the reverse proxy with the Tailscale plugin, creating virtual Tailscale nodes for each service. This provides:
+
+- **Automatic HTTPS** with Let's Encrypt certificates
+- **Domain isolation** - each service gets its own `.ts.net` hostname
+- **Cookie isolation** - separate domains prevent cookie conflicts between services
+
+### Architecture
+
+```
+                    Tailscale Network
+                    ┌─────────────────────────────────────────────────┐
+                    │                                                 │
+Browser ────────────│──► cloud.cyprus-kelvin.ts.net (100.89.212.26)   │
+                    │    │                                            │
+                    │    └──► Caddy (tsnet node "cloud")              │
+                    │         └──► reverse_proxy localhost:8080       │
+                    │              └──► nginx (Nextcloud)             │
+                    │                                                 │
+                    │    (Future services can be added similarly)     │
+                    │    jellyfin.cyprus-kelvin.ts.net → :8096        │
+                    │    grafana.cyprus-kelvin.ts.net → :3000         │
+                    │                                                 │
+                    └─────────────────────────────────────────────────┘
+```
+
+### Configuration
+
+Defined in `modules/nixos/caddy.nix`:
+
+```nix
+services.caddy = {
+  enable = true;
+
+  package = pkgs.caddy.withPlugins {
+    plugins = [ "github.com/tailscale/caddy-tailscale@v0.0.0-20250207163903-69a970c84556" ];
+    hash = "sha256-OydhzUGG3SUNeGXAsB9nqXtnwvD36+2p3QzDtU4YyFg=";
+  };
+
+  environmentFile = config.sops.secrets.tailscale_caddy_authkey.path;
+
+  globalConfig = ''
+    tailscale {
+      ephemeral false
+      state_dir /var/lib/caddy/tailscale
+    }
+  '';
+
+  virtualHosts = {
+    "https://cloud.cyprus-kelvin.ts.net" = {
+      extraConfig = ''
+        bind tailscale/cloud
+        reverse_proxy localhost:8080
+      '';
+    };
+  };
+};
+```
+
+### Adding New Services
+
+To add a new service (e.g., Jellyfin):
+
+```nix
+virtualHosts = {
+  "https://cloud.cyprus-kelvin.ts.net" = { ... };
+
+  "https://jellyfin.cyprus-kelvin.ts.net" = {
+    extraConfig = ''
+      bind tailscale/jellyfin
+      reverse_proxy localhost:8096
+    '';
+  };
+};
+```
+
+Each new virtual host creates a separate Tailscale node that appears in your Tailnet dashboard.
+
+### Managing Caddy
+
+```bash
+# Check Caddy status
+systemctl status caddy
+
+# View logs
+sudo journalctl -u caddy -f
+
+# Restart Caddy (needed after config changes)
+sudo systemctl restart caddy
+
+# Reload Caddy config (may not work with tsnet - use restart instead)
+sudo systemctl reload caddy
+```
+
+### Secrets
+
+The Tailscale auth key for Caddy is stored in sops:
+
+```yaml
+# secrets/secrets.yaml
+tailscale_caddy_authkey: TS_AUTHKEY=tskey-auth-XXXXX-XXXXXXXXXXXXX
+```
+
+Generate a new auth key at [Tailscale Admin → Settings → Keys](https://login.tailscale.com/admin/settings/keys) with "Reusable" enabled.
 
 ---
 
 ## Tailscale (VPN Mesh Network)
 
-Tailscale creates a WireGuard-based mesh VPN that allows all enrolled devices to reach each other securely, regardless of network location. This means Immich (and all other services) are accessible from anywhere without exposing ports to the public internet.
+Tailscale creates a WireGuard-based mesh VPN that allows all enrolled devices to reach each other securely, regardless of network location.
 
 ### Architecture
 
@@ -695,12 +760,10 @@ Tailscale creates a WireGuard-based mesh VPN that allows all enrolled devices to
                             │
                      ┌──────┴───────┐
                      │  shisui      │
-                     │  Tailscale   │
-                     │  ┌─────────┐ │
-                     │  │ Immich  │ │
-                     │  │ SSH     │ │
-                     │  │ etc.    │ │
-                     │  └─────────┘ │
+                     │  100.127.173.76
+                     │              │
+                     │  cloud (tsnet)
+                     │  100.89.212.26
                      └──────────────┘
 ```
 
@@ -709,47 +772,23 @@ Tailscale creates a WireGuard-based mesh VPN that allows all enrolled devices to
 Defined in `modules/nixos/tailscale.nix`:
 
 ```nix
-environment.systemPackages = [ pkgs.tailscale ];
-services.tailscale.enable = true;
+services.tailscale = {
+  enable = true;
+  permitCertUid = "caddy";  # Allow Caddy to fetch TLS certificates
+};
 
 networking.firewall = {
-  trustedInterfaces = [ "tailscale0" ];       # All services accessible via Tailscale
-  allowedUDPPorts = [ config.services.tailscale.port ];  # 41641 for direct connections
+  trustedInterfaces = [ "tailscale0" ];
+  allowedUDPPorts = [ config.services.tailscale.port ];
 };
 ```
 
-The `trustedInterfaces = [ "tailscale0" ]` setting means the firewall is fully open for traffic arriving through Tailscale. Any service running on shisui is automatically accessible to Tailscale nodes without needing per-port firewall rules.
+### Tailscale Nodes
 
-### Initial Setup
-
-After the first rebuild with Tailscale enabled:
-
-```bash
-# Authenticate the machine (prints a URL to open in browser)
-sudo tailscale up
-
-# Verify connection
-tailscale status
-
-# Show this machine's Tailscale IP
-tailscale ip
-```
-
-Log into https://login.tailscale.com to manage devices, see IPs, and configure ACLs.
-
-### Accessing Services via Tailscale
-
-Once shisui is authenticated, use its Tailscale IP from any enrolled device:
-
-```bash
-# SSH via Tailscale (works from anywhere, not just LAN)
-ssh server@<shisui-tailscale-ip>
-
-# Immich via Tailscale
-# Open in browser: http://<shisui-tailscale-ip>:2283
-```
-
-You can also use the Tailscale machine name (e.g., `shisui`) if MagicDNS is enabled in your Tailnet settings.
+| Node | IP | Purpose |
+|------|-----|---------|
+| shisui | 100.127.173.76 | Main server (system Tailscale) |
+| cloud | 100.89.212.26 | Nextcloud (Caddy tsnet node) |
 
 ### Managing Tailscale
 
@@ -763,7 +802,7 @@ tailscale status --peers
 # Show this machine's Tailscale IPs
 tailscale ip
 
-# Disconnect from Tailnet (keeps config, just goes offline)
+# Disconnect from Tailnet
 sudo tailscale down
 
 # Reconnect
@@ -773,25 +812,14 @@ sudo tailscale up
 systemctl status tailscaled
 ```
 
-### Debugging Tailscale
+### MagicDNS and Secure DNS
 
-```bash
-# Service status
-systemctl status tailscaled
+Tailscale uses MagicDNS (100.100.100.100) to resolve `.ts.net` hostnames. If your browser uses "Secure DNS" with a public resolver (like Cloudflare 1.1.1.1), `.ts.net` domains won't resolve because public DNS doesn't know about private Tailscale hostnames.
 
-# Logs
-sudo journalctl -u tailscaled -n 50
-sudo journalctl -u tailscaled -f  # follow
-
-# Check if Tailscale interface exists
-ip addr show tailscale0
-
-# Ping another Tailscale node
-tailscale ping <other-node-name>
-
-# Check firewall is trusting tailscale0
-sudo iptables -L -n | grep tailscale
-```
+**Fix for Chrome:**
+1. Go to `chrome://settings/security`
+2. Under "Use secure DNS", select **"With your current service provider"**
+3. This uses system DNS, which routes `.ts.net` to MagicDNS
 
 ---
 
@@ -807,8 +835,6 @@ Configured in `modules/nixos/laptop.nix` using two mechanisms:
    - `--powerdown 2` — DPMS power down display after 2 minutes
    - `--powersave on` — enable display power saving mode
 
-Both mechanisms are needed because `consoleblank` alone is unreliable on some hardware. The `setterm` service writes escape sequences directly to `/dev/console` with `TERM=linux`, which works regardless of whether anyone is logged into the console.
-
 ```bash
 # Verify the console-blank service ran successfully
 systemctl status console-blank
@@ -816,7 +842,7 @@ systemctl status console-blank
 # Check current kernel consoleblank value (seconds, 0 = disabled)
 cat /sys/module/kernel/parameters/consoleblank
 
-# Manually blank the screen (e.g., after a reboot where you used the console)
+# Manually blank the screen
 sudo setterm --blank 1 --powerdown 2 --powersave on > /dev/console
 ```
 
@@ -861,21 +887,6 @@ NixOS manages services natively through declarative Nix modules instead of Docke
 2. Import it in `modules/nixos/default.nix`
 3. Push, pull, rebuild
 
-Example — enabling nginx:
-
-```nix
-# modules/nixos/nginx.nix
-{ config, pkgs, ... }:
-{
-  services.nginx = {
-    enable = true;
-    virtualHosts."mysite" = {
-      root = "/var/www/mysite";
-    };
-  };
-}
-```
-
 Search available NixOS service options at https://search.nixos.org/options
 
 ---
@@ -910,16 +921,6 @@ systemctl restart sshd
 systemctl reload sshd
 ```
 
-### Inspect a Service Configuration
-
-```bash
-# View the generated systemd unit file
-systemctl cat sshd
-
-# View all properties
-systemctl show sshd
-```
-
 ---
 
 ## Logs and Debugging
@@ -929,231 +930,71 @@ All logs go through systemd's journal. No log files scattered across `/var/log/`
 ### View Logs
 
 ```bash
-# Follow all system logs (like docker logs -f)
+# Follow all system logs
 journalctl -f
 
 # Logs for a specific service
 journalctl -u sshd
-journalctl -u nginx
-journalctl -u NetworkManager
+journalctl -u caddy
+journalctl -u phpfpm-nextcloud
 
 # Follow a specific service (live tail)
-journalctl -u sshd -f
+journalctl -u caddy -f
 
 # Logs since last boot
 journalctl -b
 
-# Logs since a specific time
-journalctl --since "2026-02-04 20:00:00"
-journalctl --since "1 hour ago"
-
 # Only errors and above
 journalctl -p err
-
-# Kernel messages (like dmesg)
-journalctl -k
-```
-
-### Disk Usage of Logs
-
-```bash
-# Check journal size
-journalctl --disk-usage
-
-# Trim logs older than 7 days
-sudo journalctl --vacuum-time=7d
-
-# Trim logs to max 500MB
-sudo journalctl --vacuum-size=500M
-```
-
-### Debug a Failing Service
-
-```bash
-# 1. Check what failed
-systemctl list-units --failed
-
-# 2. Get the status and recent logs
-systemctl status myservice
-
-# 3. Get full logs
-journalctl -u myservice --no-pager
-
-# 4. Check the generated unit file for misconfigs
-systemctl cat myservice
-
-# 5. Analyze security/sandboxing of a service
-systemd-analyze security myservice
-```
-
----
-
-## NixOS Rebuild Modes
-
-```bash
-# Apply changes and set as default boot entry
-sudo nixos-rebuild switch --flake .#shisui
-
-# Apply changes but DON'T set as default boot (safe testing - reverts on reboot)
-sudo nixos-rebuild test --flake .#shisui
-
-# Set as default boot but DON'T apply now (applies on next reboot)
-sudo nixos-rebuild boot --flake .#shisui
-
-# Dry run - show what would change without applying
-sudo nixos-rebuild dry-activate --flake .#shisui
-
-# Build only - check if config compiles without applying
-sudo nixos-rebuild build --flake .#shisui
-```
-
-Use `test` when making risky changes (networking, SSH). If something breaks, reboot and the previous working config loads automatically.
-
----
-
-## Inspect NixOS Configuration
-
-```bash
-# Query a specific option value
-nixos-option services.openssh.enable
-
-# Interactive REPL to explore the full config
-nix repl '<nixpkgs/nixos>'
-# Then: config.services.openssh.enable
-# Then: config.networking.firewall.allowedTCPPorts
-
-# List all available generations
-ls -la /nix/var/nix/profiles/system-*-link
-
-# Show current system generation
-readlink /nix/var/nix/profiles/system
-```
-
----
-
-## Network Debugging
-
-```bash
-# Show all interfaces and IPs
-ip addr
-
-# Show current WiFi connection
-nmcli connection show --active
-
-# Show all saved WiFi profiles
-nmcli connection show
-
-# Show default gateway
-ip route | grep default
-
-# Show DNS servers
-cat /etc/resolv.conf
-
-# Test firewall - list all rules
-sudo iptables -L -n
-
-# Check what ports are listening
-ss -tlnp
-
-# Test connectivity to a specific port
-nc -zv 192.168.100.10 22
-```
-
----
-
-## System Monitoring
-
-```bash
-# Real-time process monitor
-htop
-btop
-
-# Disk usage
-df -h
-
-# Nix store size
-du -sh /nix/store
-
-# Memory usage
-free -h
-
-# Swap usage
-swapon --show
-
-# CPU info
-lscpu
-
-# System uptime
-uptime
-
-# Who is logged in
-w
-
-# Last logins
-last
 ```
 
 ---
 
 ## Troubleshooting
 
-### WiFi not connecting after rebuild
+### Nextcloud not loading
+
+Check if services are running:
 
 ```bash
-systemctl restart NetworkManager
-ip link set wlp2s0 up
-nmcli device wifi list
-nmcli device wifi connect "SSID" password "PASSWORD"
+systemctl status caddy phpfpm-nextcloud nginx postgresql redis-nextcloud
 ```
 
-### SSH connection refused
-
-Check if SSH is running and listening:
+Check Caddy logs for TLS errors:
 
 ```bash
-systemctl status sshd
-ss -tlnp | grep 22
+sudo journalctl -u caddy --since "5 minutes ago" | grep -i error
 ```
 
-### Lost SSH access after config change
+### DNS_PROBE_FINISHED_NXDOMAIN for .ts.net
 
-Boot into a previous generation via GRUB menu ("NixOS - All configurations"), then fix the config and rebuild.
+Your browser is using a public DNS that doesn't know about Tailscale hostnames. Either:
+- Disable "Secure DNS" in browser settings
+- Or set it to "With your current service provider"
 
-### Nix flake not seeing new files
-
-New files must be staged in git before Nix can see them:
+Verify DNS works via terminal:
 
 ```bash
-git add path/to/new/file.nix
+dig cloud.cyprus-kelvin.ts.net
+# Should return the Tailscale IP (e.g., 100.89.212.26)
 ```
 
-### Immich not loading in browser
+### Caddy not starting
 
-Check if the service is running and listening on the correct interface:
+Check logs:
 
 ```bash
-systemctl status immich-server
-sudo ss -tlnp | grep 2283
+sudo journalctl -u caddy --since "5 minutes ago" --no-pager
 ```
 
-If it shows `[::1]:2283`, it's only on localhost. Restart:
-
-```bash
-sudo systemctl restart immich-server
-```
-
-If the service isn't running at all, check logs:
-
-```bash
-sudo journalctl -u immich-server -n 50
-sudo journalctl -u postgresql -n 50
-sudo journalctl -u redis-immich -n 50
-```
+Common issues:
+- Invalid auth key: Check `sudo cat /run/secrets/tailscale_caddy_authkey`
+- Port conflict: Another process using port 443
+- tsnet state issue: Try `sudo rm -rf /var/lib/caddy/tailscale/*` and restart
 
 ### Tailscale not connecting
 
 ```bash
-# Check the daemon
 systemctl status tailscaled
 sudo journalctl -u tailscaled -n 50
 
@@ -1164,21 +1005,12 @@ sudo tailscale up
 ip addr show tailscale0
 ```
 
-### Services not accessible via Tailscale
-
-Verify the `tailscale0` interface is trusted in the firewall:
-
-```bash
-sudo iptables -L -n | grep tailscale
-tailscale ping <target-node>
-```
-
 ### Disk space running low
 
 ```bash
 sudo nix-collect-garbage -d
 sudo nix-store --optimise
 
-# Check Immich media storage specifically
-du -sh /var/lib/immich
+# Check Nextcloud storage
+du -sh /var/lib/nextcloud
 ```
