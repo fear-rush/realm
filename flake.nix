@@ -111,6 +111,18 @@
         path = ./templates/bun;
         description = "Bun project";
       };
+      php = {
+        path = ./templates/php;
+        description = "PHP development environment";
+      };
+      golang = {
+        path = ./templates/golang;
+        description = "Go development environment";
+      };
+      go = {
+        path = ./templates/golang;
+        description = "Go development environment";
+      };
     };
   };
 }
