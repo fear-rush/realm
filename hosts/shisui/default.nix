@@ -37,6 +37,7 @@
     ripgrep
     fd
     jq
+    direnv
   ];
 
   # NixOS version - don't change after install
