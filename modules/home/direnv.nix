@@ -4,6 +4,7 @@
   programs.direnv = {
     enable = true;
     enableZshIntegration = true;
+    enableBashIntegration = true;
 
     # Fast, cached nix integration
     nix-direnv.enable = true;

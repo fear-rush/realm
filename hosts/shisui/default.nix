@@ -37,8 +37,6 @@
     ripgrep
     fd
     jq
-    direnv
-    nix-direnv
   ];
 
   # NixOS version - don't change after install
